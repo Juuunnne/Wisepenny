@@ -1,4 +1,3 @@
-import org.gradle.declarative.dsl.schema.FqName.Empty.packageName
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 
 plugins {
@@ -18,7 +17,6 @@ kotlin {
     }
 
     listOf(
-        iosX64(),
         iosArm64(),
         iosSimulatorArm64()
     ).forEach { iosTarget ->
@@ -45,7 +43,6 @@ kotlin {
             implementation(libs.compose.uiToolingPreview)
             implementation(libs.androidx.lifecycle.viewmodelCompose)
             implementation(libs.androidx.lifecycle.runtimeCompose)
-            implementation("org.jetbrains.kotlinx:kotlinx-datetime:0.7.1")
             implementation(libs.kotlinx.coroutines.core)
             implementation(libs.ktor.client.core)
             implementation(libs.ktor.client.content.negotiation)
@@ -98,7 +95,7 @@ dependencies {
 sqldelight {
     databases {
         create("WisepennyDatabase") {
-            packageName.set("com.example.wisepenny.db")
+            packageName.set("com.wisepenny.db")
             // Optional: specify the directory for .sq files
             // srcDirs.set(listOf("src/commonMain/sqldelight"))
         }
