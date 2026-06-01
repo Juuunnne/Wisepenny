@@ -1,0 +1,17 @@
+package com.wisepenny.di
+
+import com.wisepenny.data.local.DatabaseDriverFactory
+import com.wisepenny.data.repository.ChallengeRepositoryImpl
+import com.wisepenny.db.WisepennyDatabase
+import com.wisepenny.domain.repository.ChallengeRepository
+import com.wisepenny.presentation.challenge.ChallengeViewModel
+import org.koin.core.module.dsl.viewModelOf
+import org.koin.dsl.module
+
+// The shared dependency graph. The platform DatabaseDriverFactory is supplied
+// separately (see initKoin) because Android needs a Context and iOS does not.
+val appModule = module {
+    single { WisepennyDatabase(get<DatabaseDriverFactory>().create()) }
+    single<ChallengeRepository> { ChallengeRepositoryImpl(get()) }
+    viewModelOf(::ChallengeViewModel)
+}

@@ -51,6 +51,8 @@ kotlin {
             implementation(libs.sqldelight.coroutines.extensions)
             implementation(libs.kotlinx.datetime)
             implementation(libs.koin.core)
+            implementation(libs.koin.compose)
+            implementation(libs.koin.compose.viewmodel)
         }
         iosMain.dependencies {
             implementation(libs.ktor.client.darwin)

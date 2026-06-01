@@ -1,41 +1,24 @@
 package com.wisepenny
 
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.runtime.getValue
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.wisepenny.presentation.challenge.ChallengeDetailScreen
-import com.wisepenny.presentation.challenge.ChallengeUiState
-import com.wisepenny.presentation.challenge.HistoryDay
+import com.wisepenny.presentation.challenge.ChallengeViewModel
 import com.wisepenny.presentation.theme.WisepennyTheme
+import org.koin.compose.viewmodel.koinViewModel
 
 @Composable
-@Preview
 fun App() {
     WisepennyTheme {
+        val viewModel = koinViewModel<ChallengeViewModel>()
+        val state by viewModel.uiState.collectAsStateWithLifecycle()
         ChallengeDetailScreen(
-            state = sampleChallengeUiState(),
-            onValidateDay = { /* TODO: Step 4 will wire this to the ViewModel */ },
-            onSkipDay = { /* TODO: Step 4 will wire this to the ViewModel */ },
+            state = state,
+            onValidateDay = viewModel::onValidateDay,
+            onSkipDay = viewModel::onSkipDay,
             onBack = { /* TODO: Step 6 will wire this to navigation */ },
             onShare = { /* TODO: Step 9 will wire this to native share sheet */ },
         )
     }
-}
-
-private fun sampleChallengeUiState(): ChallengeUiState {
-    val completedDays = 2
-    val totalDays = 7
-    val dailyAmountEuros = 3
-    val dayLabels = listOf("Lundi", "Mardi", "Mercredi", "Jeudi", "Vendredi", "Samedi", "Dimanche")
-    return ChallengeUiState(
-        title = "7 jours sans café",
-        subtitle = "Économise 21 € en une semaine",
-        totalSavings = "${completedDays * dailyAmountEuros} €",
-        xpGained = "+25 XP",
-        completedDays = completedDays,
-        currentDay = completedDays + 1,
-        totalDays = totalDays,
-        todayQuestion = "As-tu sauté ton café ce matin?",
-        todayActionLabel = "Oui, $dailyAmountEuros € épargnés",
-        history = dayLabels.take(completedDays).map { HistoryDay(it, "+$dailyAmountEuros €") },
-    )
 }
