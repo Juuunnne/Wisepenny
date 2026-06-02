@@ -1,0 +1,53 @@
+CREATE TABLE Goal (
+    id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+    name TEXT NOT NULL,
+    category TEXT NOT NULL,
+    subtitle TEXT NOT NULL,
+    iconKey TEXT NOT NULL,
+    targetAmountCents INTEGER NOT NULL,
+    savedAmountCents INTEGER NOT NULL DEFAULT 0,
+    isPriority INTEGER NOT NULL DEFAULT 0,
+    targetDate TEXT,
+    autoSaveAmountCents INTEGER,
+    autoSaveCadence TEXT,
+    createdDate TEXT NOT NULL,
+    autoSaveLastAppliedDate TEXT
+);
+
+selectAll:
+SELECT *
+FROM Goal
+ORDER BY isPriority DESC, id ASC;
+
+selectById:
+SELECT *
+FROM Goal
+WHERE id = :id;
+
+insertGoal:
+INSERT INTO Goal(name, category, subtitle, iconKey, targetAmountCents, isPriority, targetDate, createdDate)
+VALUES (?, ?, ?, ?, ?, ?, ?, ?);
+
+lastInsertRowId:
+SELECT last_insert_rowid();
+
+addContribution:
+UPDATE Goal
+SET savedAmountCents = savedAmountCents + :amount
+WHERE id = :id;
+
+setAutoSave:
+UPDATE Goal
+SET autoSaveAmountCents = :amount,
+    autoSaveCadence = :cadence,
+    autoSaveLastAppliedDate = :date
+WHERE id = :id;
+
+applyAutoSave:
+UPDATE Goal
+SET savedAmountCents = savedAmountCents + :amount,
+    autoSaveLastAppliedDate = :date
+WHERE id = :id;
+
+deleteAll:
+DELETE FROM Goal;
