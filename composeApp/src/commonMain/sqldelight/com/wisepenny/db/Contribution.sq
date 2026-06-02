@@ -1,0 +1,25 @@
+CREATE TABLE Contribution (
+    id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+    amountCents INTEGER NOT NULL,
+    date TEXT NOT NULL,
+    goalId INTEGER,
+    source TEXT NOT NULL
+);
+
+-- ISO yyyy-MM-dd dates compare lexicographically, so a month is a simple range.
+sumBetween:
+SELECT COALESCE(SUM(amountCents), 0)
+FROM Contribution
+WHERE date >= :startInclusive AND date < :endExclusive;
+
+selectAll:
+SELECT *
+FROM Contribution
+ORDER BY date DESC, id DESC;
+
+insert:
+INSERT INTO Contribution(amountCents, date, goalId, source)
+VALUES (?, ?, ?, ?);
+
+deleteAll:
+DELETE FROM Contribution;
