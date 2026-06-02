@@ -1,6 +1,7 @@
 package com.wisepenny.data.repository
 
 import app.cash.sqldelight.coroutines.asFlow
+import app.cash.sqldelight.coroutines.mapToList
 import app.cash.sqldelight.coroutines.mapToOneOrNull
 import com.wisepenny.data.mapper.toDomain
 import com.wisepenny.db.WisepennyDatabase
@@ -14,15 +15,21 @@ import kotlinx.coroutines.withContext
 import kotlinx.datetime.LocalDate
 
 class ChallengeRepositoryImpl(
-    database: WisepennyDatabase,
+    private val database: WisepennyDatabase,
 ) : ChallengeRepository {
 
     private val queries = database.challengeQueries
+    private val goalQueries = database.goalQueries
 
     override fun observeActive(): Flow<Challenge?> = queries.selectActive()
         .asFlow()
         .mapToOneOrNull(Dispatchers.IO)
         .map { row -> row?.toDomain() }
+
+    override fun observeByGoal(goalId: Long): Flow<List<Challenge>> = queries.selectByGoal(goalId)
+        .asFlow()
+        .mapToList(Dispatchers.IO)
+        .map { rows -> rows.map { it.toDomain() } }
 
     override suspend fun create(
         title: String,
@@ -30,6 +37,7 @@ class ChallengeRepositoryImpl(
         dailyAmountCents: Long,
         totalDays: Int,
         startDate: LocalDate,
+        goalId: Long?,
     ) {
         withContext(Dispatchers.IO) {
             queries.insertChallenge(
@@ -38,13 +46,30 @@ class ChallengeRepositoryImpl(
                 dailyAmountCents = dailyAmountCents,
                 totalDays = totalDays.toLong(),
                 startDate = startDate.toString(),
+                goalId = goalId,
             )
         }
     }
 
     override suspend fun completeToday(challengeId: Long) {
         withContext(Dispatchers.IO) {
-            queries.incrementCompletedDays(challengeId)
+            queries.transaction {
+                queries.incrementCompletedDays(challengeId)
+                // Cross-feature loop: if this challenge feeds a savings goal,
+                // its daily amount also lands in that goal. No-op when unlinked,
+                // so the standalone Challenge screen behaves exactly as before.
+                val challenge = queries.selectById(challengeId).executeAsOneOrNull()
+                val goalId = challenge?.goalId
+                if (goalId != null) {
+                    goalQueries.addContribution(amount = challenge.dailyAmountCents, id = goalId)
+                }
+            }
+        }
+    }
+
+    override suspend fun linkToGoal(challengeId: Long, goalId: Long) {
+        withContext(Dispatchers.IO) {
+            queries.linkToGoal(goalId = goalId, id = challengeId)
         }
     }
 

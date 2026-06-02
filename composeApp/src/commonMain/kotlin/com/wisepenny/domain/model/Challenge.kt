@@ -10,4 +10,5 @@ data class Challenge(
     val totalDays: Int,
     val completedDays: Int,
     val startDate: LocalDate,
+    val goalId: Long?,
 )

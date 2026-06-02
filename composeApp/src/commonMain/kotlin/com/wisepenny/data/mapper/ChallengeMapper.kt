@@ -12,4 +12,5 @@ fun ChallengeRow.toDomain(): Challenge = Challenge(
     totalDays = totalDays.toInt(),
     completedDays = completedDays.toInt(),
     startDate = LocalDate.parse(startDate),
+    goalId = goalId,
 )

@@ -2,9 +2,12 @@ package com.wisepenny.di
 
 import com.wisepenny.data.local.DatabaseDriverFactory
 import com.wisepenny.data.repository.ChallengeRepositoryImpl
+import com.wisepenny.data.repository.GoalRepositoryImpl
 import com.wisepenny.db.WisepennyDatabase
 import com.wisepenny.domain.repository.ChallengeRepository
+import com.wisepenny.domain.repository.GoalRepository
 import com.wisepenny.presentation.challenge.ChallengeViewModel
+import com.wisepenny.presentation.goal.GoalViewModel
 import org.koin.core.module.dsl.viewModelOf
 import org.koin.dsl.module
 
@@ -13,5 +16,7 @@ import org.koin.dsl.module
 val appModule = module {
     single { WisepennyDatabase(get<DatabaseDriverFactory>().create()) }
     single<ChallengeRepository> { ChallengeRepositoryImpl(get()) }
+    single<GoalRepository> { GoalRepositoryImpl(get()) }
     viewModelOf(::ChallengeViewModel)
+    viewModelOf(::GoalViewModel)
 }

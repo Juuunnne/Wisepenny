@@ -5,7 +5,8 @@ CREATE TABLE Challenge (
     dailyAmountCents INTEGER NOT NULL,
     totalDays INTEGER NOT NULL,
     completedDays INTEGER NOT NULL DEFAULT 0,
-    startDate TEXT NOT NULL
+    startDate TEXT NOT NULL,
+    goalId INTEGER
 );
 
 selectActive:
@@ -13,13 +14,29 @@ SELECT *
 FROM Challenge
 LIMIT 1;
 
+selectById:
+SELECT *
+FROM Challenge
+WHERE id = :id;
+
+selectByGoal:
+SELECT *
+FROM Challenge
+WHERE goalId = :goalId
+ORDER BY id ASC;
+
 insertChallenge:
-INSERT INTO Challenge(title, subtitle, dailyAmountCents, totalDays, startDate)
-VALUES (?, ?, ?, ?, ?);
+INSERT INTO Challenge(title, subtitle, dailyAmountCents, totalDays, startDate, goalId)
+VALUES (?, ?, ?, ?, ?, ?);
 
 incrementCompletedDays:
 UPDATE Challenge
 SET completedDays = completedDays + 1
+WHERE id = :id;
+
+linkToGoal:
+UPDATE Challenge
+SET goalId = :goalId
 WHERE id = :id;
 
 deleteAll:
