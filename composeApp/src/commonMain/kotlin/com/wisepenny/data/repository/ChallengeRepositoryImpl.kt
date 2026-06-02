@@ -20,6 +20,7 @@ class ChallengeRepositoryImpl(
 
     private val queries = database.challengeQueries
     private val goalQueries = database.goalQueries
+    private val contributionQueries = database.contributionQueries
 
     override fun observeActive(): Flow<Challenge?> = queries.selectActive()
         .asFlow()
@@ -27,6 +28,11 @@ class ChallengeRepositoryImpl(
         .map { row -> row?.toDomain() }
 
     override fun observeByGoal(goalId: Long): Flow<List<Challenge>> = queries.selectByGoal(goalId)
+        .asFlow()
+        .mapToList(Dispatchers.IO)
+        .map { rows -> rows.map { it.toDomain() } }
+
+    override fun observeActiveChallenges(): Flow<List<Challenge>> = queries.selectActiveAll()
         .asFlow()
         .mapToList(Dispatchers.IO)
         .map { rows -> rows.map { it.toDomain() } }
@@ -51,17 +57,24 @@ class ChallengeRepositoryImpl(
         }
     }
 
-    override suspend fun completeToday(challengeId: Long) {
+    override suspend fun completeToday(challengeId: Long, today: LocalDate) {
         withContext(Dispatchers.IO) {
             queries.transaction {
                 queries.incrementCompletedDays(challengeId)
                 // Cross-feature loop: if this challenge feeds a savings goal,
-                // its daily amount also lands in that goal. No-op when unlinked,
-                // so the standalone Challenge screen behaves exactly as before.
+                // its daily amount also lands in that goal and is logged as a
+                // contribution. No-op when unlinked, so the standalone Challenge
+                // screen behaves exactly as before.
                 val challenge = queries.selectById(challengeId).executeAsOneOrNull()
                 val goalId = challenge?.goalId
                 if (goalId != null) {
                     goalQueries.addContribution(amount = challenge.dailyAmountCents, id = goalId)
+                    contributionQueries.insert(
+                        amountCents = challenge.dailyAmountCents,
+                        date = today.toString(),
+                        goalId = goalId,
+                        source = "challenge",
+                    )
                 }
             }
         }

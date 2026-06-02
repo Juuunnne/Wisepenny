@@ -25,6 +25,12 @@ FROM Challenge
 WHERE goalId = :goalId
 ORDER BY id ASC;
 
+selectActiveAll:
+SELECT *
+FROM Challenge
+WHERE completedDays < totalDays
+ORDER BY id ASC;
+
 insertChallenge:
 INSERT INTO Challenge(title, subtitle, dailyAmountCents, totalDays, startDate, goalId)
 VALUES (?, ?, ?, ?, ?, ?);

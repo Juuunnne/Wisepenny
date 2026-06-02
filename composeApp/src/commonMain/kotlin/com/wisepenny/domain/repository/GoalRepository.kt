@@ -22,7 +22,12 @@ interface GoalRepository {
         createdDate: LocalDate,
     ): Long
 
-    suspend fun addContribution(goalId: Long, amountCents: Long)
+    suspend fun addContribution(
+        goalId: Long,
+        amountCents: Long,
+        date: LocalDate,
+        source: String,
+    )
 
     suspend fun setAutoSave(
         goalId: Long,

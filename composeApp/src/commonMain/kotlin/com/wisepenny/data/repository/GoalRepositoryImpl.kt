@@ -23,6 +23,7 @@ class GoalRepositoryImpl(
 ) : GoalRepository {
 
     private val queries = database.goalQueries
+    private val contributionQueries = database.contributionQueries
 
     override fun observeAll(): Flow<List<Goal>> = queries.selectAll()
         .asFlow()
@@ -59,9 +60,22 @@ class GoalRepositoryImpl(
         }
     }
 
-    override suspend fun addContribution(goalId: Long, amountCents: Long) {
+    override suspend fun addContribution(
+        goalId: Long,
+        amountCents: Long,
+        date: LocalDate,
+        source: String,
+    ) {
         withContext(Dispatchers.IO) {
-            queries.addContribution(amount = amountCents, id = goalId)
+            queries.transaction {
+                queries.addContribution(amount = amountCents, id = goalId)
+                contributionQueries.insert(
+                    amountCents = amountCents,
+                    date = date.toString(),
+                    goalId = goalId,
+                    source = source,
+                )
+            }
         }
     }
 
@@ -93,7 +107,17 @@ class GoalRepositoryImpl(
                 val remaining = (goal.targetAmountCents - goal.savedAmountCents).coerceAtLeast(0)
                 val toAdd = (amount * periods).coerceAtMost(remaining)
                 val newLastApplied = lastApplied.plus(periods * cadence.days, DateTimeUnit.DAY)
-                queries.applyAutoSave(amount = toAdd, date = newLastApplied.toString(), id = goal.id)
+                queries.transaction {
+                    queries.applyAutoSave(amount = toAdd, date = newLastApplied.toString(), id = goal.id)
+                    if (toAdd > 0) {
+                        contributionQueries.insert(
+                            amountCents = toAdd,
+                            date = newLastApplied.toString(),
+                            goalId = goal.id,
+                            source = "auto",
+                        )
+                    }
+                }
             }
         }
     }

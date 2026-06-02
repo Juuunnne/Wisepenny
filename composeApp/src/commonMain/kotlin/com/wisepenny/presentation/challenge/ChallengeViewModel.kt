@@ -6,7 +6,6 @@ import com.wisepenny.domain.model.Challenge
 import com.wisepenny.domain.repository.ChallengeRepository
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
@@ -34,34 +33,16 @@ class ChallengeViewModel(
             initialValue = EmptyState,
         )
 
-    init {
-        viewModelScope.launch {
-            ensureDefaultChallenge()
-        }
-    }
-
     fun onValidateDay() {
         val challenge = activeChallenge.value ?: return
         viewModelScope.launch {
-            repository.completeToday(challenge.id)
+            repository.completeToday(challenge.id, today())
         }
     }
 
     fun onSkipDay() {
         // v1: skipping is silent — no DB write, no streak penalty.
         // Step 9 will decide whether to record skips for analytics.
-    }
-
-    private suspend fun ensureDefaultChallenge() {
-        if (repository.observeActive().first() == null) {
-            repository.create(
-                title = "7 jours sans café",
-                subtitle = "Économise 21 € en une semaine",
-                dailyAmountCents = 300L,
-                totalDays = 7,
-                startDate = today(),
-            )
-        }
     }
 
     private fun today(): LocalDate =

@@ -10,6 +10,8 @@ interface ChallengeRepository {
 
     fun observeByGoal(goalId: Long): Flow<List<Challenge>>
 
+    fun observeActiveChallenges(): Flow<List<Challenge>>
+
     suspend fun create(
         title: String,
         subtitle: String,
@@ -19,7 +21,7 @@ interface ChallengeRepository {
         goalId: Long? = null,
     )
 
-    suspend fun completeToday(challengeId: Long)
+    suspend fun completeToday(challengeId: Long, today: LocalDate)
 
     suspend fun linkToGoal(challengeId: Long, goalId: Long)
 

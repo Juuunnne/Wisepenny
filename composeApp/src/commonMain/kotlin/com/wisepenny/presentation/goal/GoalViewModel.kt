@@ -12,7 +12,6 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
@@ -24,7 +23,6 @@ import kotlinx.datetime.DateTimeUnit
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.daysUntil
-import kotlinx.datetime.minus
 import kotlinx.datetime.plus
 import kotlinx.datetime.toLocalDateTime
 
@@ -61,13 +59,6 @@ class GoalViewModel(
             initialValue = null,
         )
 
-    init {
-        viewModelScope.launch {
-            goalRepository.applyDueAutoSaves(today())
-            ensureSampleData()
-        }
-    }
-
     fun selectGoal(id: Long) {
         selectedId.value = id
     }
@@ -76,9 +67,9 @@ class GoalViewModel(
         selectedId.value = null
     }
 
-    fun onQuickAdd() = addToSelected(QUICK_ADD_CENTS)
+    fun onQuickAdd() = addToSelected(QUICK_ADD_CENTS, "quick")
 
-    fun onAddManual(amountCents: Long) = addToSelected(amountCents)
+    fun onAddManual(amountCents: Long) = addToSelected(amountCents, "manual")
 
     fun onSetAutoSave(amountCents: Long, cadence: SavingsCadence) {
         val id = selectedId.value ?: return
@@ -87,68 +78,10 @@ class GoalViewModel(
         }
     }
 
-    private fun addToSelected(amountCents: Long) {
+    private fun addToSelected(amountCents: Long, source: String) {
         val id = selectedId.value ?: return
         viewModelScope.launch {
-            goalRepository.addContribution(id, amountCents)
-        }
-    }
-
-    private suspend fun ensureSampleData() {
-        if (goalRepository.observeAll().first().isNotEmpty()) return
-        val seededOn = today().minus(60, DateTimeUnit.DAY)
-
-        val japonId = goalRepository.create(
-            name = "Voyage au Japon",
-            category = "Voyage",
-            subtitle = "",
-            iconKey = "travel",
-            targetAmountCents = 3_000_00,
-            isPriority = true,
-            targetDate = null,
-            createdDate = seededOn,
-        )
-        goalRepository.addContribution(japonId, 1_250_00)
-
-        val ordiId = goalRepository.create(
-            name = "Nouvel ordi",
-            category = "Tech",
-            subtitle = "",
-            iconKey = "laptop",
-            targetAmountCents = 1_200_00,
-            isPriority = false,
-            targetDate = null,
-            createdDate = seededOn,
-        )
-        goalRepository.addContribution(ordiId, 450_00)
-
-        val lisbonneId = goalRepository.create(
-            name = "Lisbonne 2026",
-            category = "Voyage",
-            subtitle = "Avec Sarah et Tom",
-            iconKey = "travel",
-            targetAmountCents = 800_00,
-            isPriority = false,
-            targetDate = null,
-            createdDate = seededOn,
-        )
-        goalRepository.addContribution(lisbonneId, 450_00)
-        goalRepository.setAutoSave(lisbonneId, 50_00, SavingsCadence.WEEKLY, today())
-
-        // Link a daily challenge to Lisbonne so "Défis liés" shows live data and
-        // completing a day on the Challenge screen credits this goal.
-        val active = challengeRepository.observeActive().first()
-        if (active == null) {
-            challengeRepository.create(
-                title = "7 jours sans café",
-                subtitle = "Économise 21 € en une semaine",
-                dailyAmountCents = 300,
-                totalDays = 7,
-                startDate = today(),
-                goalId = lisbonneId,
-            )
-        } else {
-            challengeRepository.linkToGoal(active.id, lisbonneId)
+            goalRepository.addContribution(id, amountCents, today(), source)
         }
     }
 
