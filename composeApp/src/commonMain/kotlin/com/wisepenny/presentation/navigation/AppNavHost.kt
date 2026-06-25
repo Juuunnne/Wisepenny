@@ -23,6 +23,9 @@ import com.wisepenny.presentation.dashboard.DashboardViewModel
 import com.wisepenny.presentation.goal.GoalDetailScreen
 import com.wisepenny.presentation.goal.GoalListScreen
 import com.wisepenny.presentation.goal.GoalViewModel
+import com.wisepenny.presentation.learning.LearningListScreen
+import com.wisepenny.presentation.learning.LearningViewModel
+import com.wisepenny.presentation.learning.ModuleReaderScreen
 import com.wisepenny.presentation.theme.WisepennyColors
 import org.koin.compose.viewmodel.koinViewModel
 
@@ -60,7 +63,14 @@ fun AppNavHost() {
                 )
             }
 
-            composable<Apprendre> { ComingSoonScreen(title = "Apprendre") }
+            composable<Apprendre> {
+                val viewModel = koinViewModel<LearningViewModel>()
+                val state by viewModel.listState.collectAsStateWithLifecycle()
+                LearningListScreen(
+                    state = state,
+                    onModuleClick = { navController.navigate(ModuleReaderRoute(it)) },
+                )
+            }
 
             composable<Objectifs> {
                 val viewModel = koinViewModel<GoalViewModel>()
@@ -105,6 +115,20 @@ fun AppNavHost() {
                     onBack = { navController.popBackStack() },
                     onShare = { /* TODO: Step 9 native share sheet */ },
                 )
+            }
+
+            composable<ModuleReaderRoute> { entry ->
+                val moduleId = entry.toRoute<ModuleReaderRoute>().moduleId
+                val viewModel = koinViewModel<LearningViewModel>()
+                LaunchedEffect(moduleId) { viewModel.selectModule(moduleId) }
+                val state by viewModel.readerState.collectAsStateWithLifecycle()
+                state?.let {
+                    ModuleReaderScreen(
+                        uiState = it,
+                        onAdvance = { pageIndex -> viewModel.onAdvance(moduleId, pageIndex) },
+                        onClose = { navController.popBackStack() },
+                    )
+                }
             }
         }
 
