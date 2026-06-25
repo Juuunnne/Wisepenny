@@ -4,14 +4,19 @@ import com.wisepenny.data.local.DatabaseDriverFactory
 import com.wisepenny.data.repository.ChallengeRepositoryImpl
 import com.wisepenny.data.repository.ContributionRepositoryImpl
 import com.wisepenny.data.repository.GoalRepositoryImpl
+import com.wisepenny.data.repository.ModuleContentRepositoryImpl
+import com.wisepenny.data.repository.ModuleProgressRepositoryImpl
 import com.wisepenny.data.seed.DataSeeder
 import com.wisepenny.db.WisepennyDatabase
 import com.wisepenny.domain.repository.ChallengeRepository
 import com.wisepenny.domain.repository.ContributionRepository
 import com.wisepenny.domain.repository.GoalRepository
+import com.wisepenny.domain.repository.ModuleContentRepository
+import com.wisepenny.domain.repository.ModuleProgressRepository
 import com.wisepenny.presentation.challenge.ChallengeViewModel
 import com.wisepenny.presentation.dashboard.DashboardViewModel
 import com.wisepenny.presentation.goal.GoalViewModel
+import com.wisepenny.presentation.learning.LearningViewModel
 import org.koin.core.module.dsl.viewModelOf
 import org.koin.dsl.module
 
@@ -22,8 +27,11 @@ val appModule = module {
     single<ChallengeRepository> { ChallengeRepositoryImpl(get()) }
     single<GoalRepository> { GoalRepositoryImpl(get()) }
     single<ContributionRepository> { ContributionRepositoryImpl(get()) }
-    single { DataSeeder(get(), get()) }
+    single<ModuleContentRepository> { ModuleContentRepositoryImpl() }
+    single<ModuleProgressRepository> { ModuleProgressRepositoryImpl(get()) }
+    single { DataSeeder(get(), get(), get()) }
     viewModelOf(::ChallengeViewModel)
     viewModelOf(::GoalViewModel)
     viewModelOf(::DashboardViewModel)
+    viewModelOf(::LearningViewModel)
 }

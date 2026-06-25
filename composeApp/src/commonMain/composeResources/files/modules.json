@@ -1,0 +1,101 @@
+[
+  {
+    "id": "bourse",
+    "title": "Les bases de la bourse",
+    "description": "Comprendre les fondations des marchés pour investir avec confiance.",
+    "level": "DEBUTANT",
+    "pages": [
+      {
+        "heading": "Qu'est-ce qu'une action ?",
+        "body": "Une action, c'est une petite part de propriété d'une entreprise. En acheter une, c'est devenir copropriétaire : si l'entreprise grandit et prend de la valeur, ta part en gagne aussi. Tu ne prêtes pas ton argent, tu possèdes un morceau de la société.",
+        "example": "Imagine une pizzeria découpée en 1 000 parts. Acheter une action, c'est posséder une de ces parts — et toucher une tranche des bénéfices si le restaurant marche bien."
+      },
+      {
+        "heading": "Risque et rendement vont de pair",
+        "body": "Plus un placement peut rapporter, plus il peut aussi faire perdre. Le cours d'une action monte et descend selon la santé de l'entreprise et l'humeur des marchés. Ces variations sont normales : c'est le prix à payer pour viser un rendement supérieur au livret d'épargne.",
+        "example": "Sur un an, une action peut gagner 15 % comme en perdre 15 %. Un Livret A, lui, rapporte peu mais ne baisse jamais. À toi de doser selon ton horizon."
+      },
+      {
+        "heading": "Ne mets pas tous tes œufs dans le même panier",
+        "body": "Diversifier, c'est répartir ton argent sur plusieurs entreprises et secteurs. Si l'une chute, les autres amortissent le choc. Une seule action, c'est un pari ; un panier d'actions, c'est une stratégie.",
+        "example": "Avec un fonds indiciel (ETF), tu achètes d'un coup une part de centaines d'entreprises. Une qui s'effondre pèse alors très peu sur l'ensemble."
+      },
+      {
+        "heading": "Le temps, ton meilleur allié",
+        "body": "Plus tu investis tôt, plus tes gains génèrent eux-mêmes des gains : c'est l'effet boule de neige des intérêts composés. À 20 ans, le temps joue énormément pour toi — même de petites sommes finissent par compter beaucoup.",
+        "example": "50 € placés chaque mois à 6 % par an deviennent près de 50 000 € en 30 ans, alors que tu n'auras versé que 18 000 €. Le reste, c'est le temps qui l'a créé."
+      },
+      {
+        "heading": "Comment se lancer sans stress",
+        "body": "Commence petit, avec une somme que tu peux laisser dormir plusieurs années. Privilégie des versements réguliers plutôt que d'essayer de deviner le bon moment. L'objectif n'est pas de devenir riche vite, mais de prendre tôt une bonne habitude.",
+        "example": null
+      }
+    ]
+  },
+  {
+    "id": "epargne-auto",
+    "title": "Épargner sans effort",
+    "description": "Les stratégies d'automatisation pour construire un capital sans y penser.",
+    "level": "DEBUTANT",
+    "pages": [
+      {
+        "heading": "Pourquoi l'automatisation gagne toujours",
+        "body": "Compter sur ta seule volonté pour épargner, c'est fatigant et rarement durable. L'automatisation supprime la décision : l'argent part avant même que tu aies le temps d'hésiter. Tu épargnes alors sans y penser, mois après mois.",
+        "example": "Les études le montrent : on épargne bien plus quand le virement est automatique que quand il faut le déclencher soi-même à chaque fois."
+      },
+      {
+        "heading": "Paie-toi en premier",
+        "body": "Le réflexe naturel, c'est d'épargner ce qui reste à la fin du mois — et il ne reste souvent rien. Inverse la logique : mets de côté dès que tu reçois ton argent, puis vis avec le reste. Ton épargne devient une priorité, pas un bonus.",
+        "example": "Dès que ta paie ou ta bourse tombe, 30 € filent vers ton épargne. Tu organises tes dépenses autour de ce qui reste, sans frustration."
+      },
+      {
+        "heading": "Le virement automatique",
+        "body": "Programme un virement récurrent vers un compte d'épargne séparé, le lendemain du jour où tu es payé. Sur un autre compte, cet argent est moins tentant à dépenser. C'est la brique de base de toute épargne sans effort.",
+        "example": "Un virement de 50 € chaque 3 du mois, et au bout d'un an tu as mis 600 € de côté sans jamais y penser."
+      },
+      {
+        "heading": "La règle des 24 heures",
+        "body": "Avant un achat non essentiel, attends une journée. L'envie impulsive retombe souvent, et tu réalises que tu n'en avais pas vraiment besoin. Ce que tu ne dépenses pas, tu peux le rediriger vers un objectif qui compte.",
+        "example": "Ce pull à 40 € te fait de l'œil ? Note-le et reviens demain. Sept fois sur dix, l'envie a disparu — et les 40 € restent pour ton voyage."
+      },
+      {
+        "heading": "Arrondis tes dépenses",
+        "body": "Arrondir chaque achat à l'euro supérieur et mettre la différence de côté transforme la monnaie en épargne invisible. Chaque petite somme paraît insignifiante, mais l'accumulation est bien réelle. C'est de l'épargne indolore par excellence.",
+        "example": "Un café à 2,40 € ? Tu arrondis à 3 € et 0,60 € part à l'épargne. Multiplié par toutes tes dépenses du mois, ça finit par chiffrer."
+      }
+    ]
+  },
+  {
+    "id": "budget",
+    "title": "Ton premier budget",
+    "description": "Structurer ses finances personnelles pour allouer efficacement ses revenus.",
+    "level": "INTERMEDIAIRE",
+    "pages": [
+      {
+        "heading": "À quoi sert vraiment un budget",
+        "body": "Un budget n'est pas une punition, c'est un plan : il dit à ton argent où aller au lieu de te demander où il est passé. Avec lui, tu reprends le contrôle et tu arrêtes de finir le mois dans le rouge. C'est l'outil qui rend tes objectifs atteignables.",
+        "example": null
+      },
+      {
+        "heading": "La méthode 50/30/20",
+        "body": "Une règle simple pour répartir tes revenus : 50 % pour les besoins (loyer, courses, transport), 30 % pour les envies (sorties, loisirs) et 20 % pour l'épargne et le remboursement de dettes. Tu ajustes les curseurs selon ta situation, mais le cadre reste clair.",
+        "example": "Avec 1 000 € par mois : 500 € pour les besoins, 300 € pour les envies, 200 € pour l'épargne. Trois enveloppes, zéro casse-tête."
+      },
+      {
+        "heading": "Connais tes dépenses",
+        "body": "On ne pilote pas ce qu'on ne mesure pas. Pendant un mois, note où va chaque euro : tu découvriras presque toujours des fuites invisibles. Cette photo de tes habitudes est le point de départ de tout budget réaliste.",
+        "example": "Les abonnements oubliés, le petit resto du midi répété vingt fois… additionnés, ils pèsent souvent bien plus qu'on ne l'imagine."
+      },
+      {
+        "heading": "La méthode des enveloppes",
+        "body": "Attribue à chaque catégorie une somme fixe, comme si tu remplissais des enveloppes. Quand une enveloppe est vide, tu arrêtes de dépenser dans cette catégorie jusqu'au mois suivant. C'est concret, visuel, et ça évite les dérapages.",
+        "example": "L'enveloppe sorties est à 80 € ce mois-ci. Après trois soirées, elle est vide : place au cocooning jusqu'au mois prochain."
+      },
+      {
+        "heading": "Ajuste et tiens dans la durée",
+        "body": "Un premier budget n'est jamais parfait, et c'est normal. Revois-le chaque mois, corrige ce qui ne colle pas à ta vie réelle, et garde-le simple pour qu'il dure. Un budget imparfait que tu suis vaut mille fois mieux qu'un budget parfait que tu abandonnes.",
+        "example": null
+      }
+    ]
+  }
+]
