@@ -53,7 +53,7 @@ kotlin {
             implementation(libs.koin.core)
             implementation(libs.koin.compose)
             implementation(libs.koin.compose.viewmodel)
-            implementation(libs.navigation.compose)
+            implementation(libs.androidx.navigation.compose)
         }
         iosMain.dependencies {
             implementation(libs.ktor.client.darwin)
@@ -92,6 +92,11 @@ android {
     }
 }
 
+compose.resources {
+    publicResClass = true
+    packageOfResClass = "com.wisepenny.resources"
+}
+
 dependencies {
     debugImplementation(libs.compose.uiTooling)
 }
@@ -100,8 +105,7 @@ sqldelight {
     databases {
         create("WisepennyDatabase") {
             packageName.set("com.wisepenny.db")
-            // Optional: specify the directory for .sq files
-            // srcDirs.set(listOf("src/commonMain/sqldelight"))
+            dialect(libs.plugins.sqlDelight.get().version.requiredVersion.let { "app.cash.sqldelight:sqlite-3-35-dialect:$it" })
         }
     }
 }
