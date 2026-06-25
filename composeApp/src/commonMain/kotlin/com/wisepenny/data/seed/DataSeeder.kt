@@ -3,6 +3,7 @@ package com.wisepenny.data.seed
 import com.wisepenny.domain.model.SavingsCadence
 import com.wisepenny.domain.repository.ChallengeRepository
 import com.wisepenny.domain.repository.GoalRepository
+import com.wisepenny.domain.repository.ModuleProgressRepository
 import kotlinx.coroutines.flow.first
 import kotlin.time.Clock
 import kotlinx.datetime.DateTimeUnit
@@ -21,6 +22,7 @@ import kotlinx.datetime.toLocalDateTime
 class DataSeeder(
     private val goalRepository: GoalRepository,
     private val challengeRepository: ChallengeRepository,
+    private val moduleProgressRepository: ModuleProgressRepository,
 ) {
 
     suspend fun onAppStart() {
@@ -97,6 +99,15 @@ class DataSeeder(
         val impulsif = linked.firstOrNull { it.title.contains("impuls", ignoreCase = true) }
         repeat(5) { coffee?.let { challengeRepository.completeToday(it.id, today) } }
         repeat(2) { impulsif?.let { challengeRepository.completeToday(it.id, today) } }
+
+        // Start the first learning module at 40 % (2 of its 5 pages) to match the
+        // Apprendre mockup; the rest stay locked until it's completed.
+        moduleProgressRepository.saveProgress(
+            moduleId = "bourse",
+            pagesRead = 2,
+            completed = false,
+            completedDate = null,
+        )
     }
 
     private suspend fun fund(
