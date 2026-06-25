@@ -1,0 +1,25 @@
+CREATE TABLE ModuleProgress (
+    moduleId TEXT NOT NULL PRIMARY KEY,
+    pagesRead INTEGER NOT NULL DEFAULT 0,
+    completed INTEGER NOT NULL DEFAULT 0,
+    completedDate TEXT
+);
+
+selectAll:
+SELECT *
+FROM ModuleProgress;
+
+selectById:
+SELECT *
+FROM ModuleProgress
+WHERE moduleId = :moduleId;
+
+-- Plain insert-or-replace (core SQLite, dialect-agnostic). The monotonic merge —
+-- keep the furthest page reached, and once completed stay completed — is done in
+-- ModuleProgressRepositoryImpl so a re-read can never re-lock the next module.
+insertOrReplace:
+INSERT OR REPLACE INTO ModuleProgress(moduleId, pagesRead, completed, completedDate)
+VALUES (:moduleId, :pagesRead, :completed, :completedDate);
+
+deleteAll:
+DELETE FROM ModuleProgress;
