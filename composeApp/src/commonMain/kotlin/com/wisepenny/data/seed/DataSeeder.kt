@@ -13,7 +13,9 @@ import kotlinx.datetime.minus
 import kotlinx.datetime.toLocalDateTime
 
 /**
- * Single source of demo data, run once at app start (see [com.wisepenny.App]).
+ * Single source of demo data. Since Step 8 the demo world is seeded when the
+ * onboarding wizard completes (see [seedDemoWorld]), not on every launch — the
+ * first-run flow creates the user's real goal, then this fills the app around it.
  *
  * Seeding lives here rather than in a ViewModel because, under real navigation,
  * a tab's ViewModel is created lazily — a user who starts on the dashboard would
@@ -25,14 +27,18 @@ class DataSeeder(
     private val moduleProgressRepository: ModuleProgressRepository,
 ) {
 
+    /** Run on every launch of an already-onboarded app: no seeding, just catch-up work. */
     suspend fun onAppStart() {
-        val today = today()
-        seedIfNeeded(today)
         // Apply any auto-save contributions that have come due since last open.
-        goalRepository.applyDueAutoSaves(today)
+        goalRepository.applyDueAutoSaves(today())
     }
 
-    private suspend fun seedIfNeeded(today: LocalDate) {
+    /**
+     * Seed the demo goals/challenges/modules. Called once from the onboarding
+     * wizard's completion, before the user's own goal is created. The empty-goals
+     * guard keeps it safe if a reset→re-onboard runs it again.
+     */
+    suspend fun seedDemoWorld(today: LocalDate = today()) {
         if (goalRepository.observeAll().first().isNotEmpty()) return
 
         val createdOn = today.minus(3, DateTimeUnit.MONTH)
@@ -45,7 +51,8 @@ class DataSeeder(
             subtitle = "",
             iconKey = "travel",
             targetAmountCents = 3_000_00,
-            isPriority = true,
+            // Since Step 8 the user's onboarding goal is the single priority goal.
+            isPriority = false,
             targetDate = null,
             createdDate = createdOn,
         )

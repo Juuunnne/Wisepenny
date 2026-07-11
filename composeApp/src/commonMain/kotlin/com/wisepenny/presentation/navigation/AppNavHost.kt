@@ -1,12 +1,16 @@
 package com.wisepenny.presentation.navigation
 
+import androidx.compose.animation.EnterTransition
+import androidx.compose.animation.ExitTransition
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.backhandler.BackHandler
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavDestination.Companion.hasRoute
 import androidx.navigation.NavDestination.Companion.hierarchy
@@ -17,7 +21,6 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.toRoute
 import com.wisepenny.presentation.challenge.ChallengeDetailScreen
 import com.wisepenny.presentation.challenge.ChallengeViewModel
-import com.wisepenny.presentation.common.ComingSoonScreen
 import com.wisepenny.presentation.dashboard.DashboardScreen
 import com.wisepenny.presentation.dashboard.DashboardViewModel
 import com.wisepenny.presentation.goal.GoalDetailScreen
@@ -26,6 +29,8 @@ import com.wisepenny.presentation.goal.GoalViewModel
 import com.wisepenny.presentation.learning.LearningListScreen
 import com.wisepenny.presentation.learning.LearningViewModel
 import com.wisepenny.presentation.learning.ModuleReaderScreen
+import com.wisepenny.presentation.profile.ProfileScreen
+import com.wisepenny.presentation.profile.ProfileViewModel
 import com.wisepenny.presentation.theme.WisepennyColors
 import org.koin.compose.viewmodel.koinViewModel
 
@@ -34,6 +39,7 @@ import org.koin.compose.viewmodel.koinViewModel
  * with detail screens (goal, challenge) layered full-screen above. Replaces the
  * temporary in-memory router that hosted the screens before Step 6.
  */
+@OptIn(ExperimentalComposeUiApi::class)
 @Composable
 fun AppNavHost() {
     val navController = rememberNavController()
@@ -53,7 +59,10 @@ fun AppNavHost() {
             startDestination = Accueil,
             modifier = Modifier.weight(1f),
         ) {
-            composable<Accueil> {
+            composable<Accueil>(
+                enterTransition = { EnterTransition.None },
+                exitTransition = { ExitTransition.None },
+            ) {
                 val viewModel = koinViewModel<DashboardViewModel>()
                 val state by viewModel.uiState.collectAsStateWithLifecycle()
                 DashboardScreen(
@@ -63,7 +72,10 @@ fun AppNavHost() {
                 )
             }
 
-            composable<Apprendre> {
+            composable<Apprendre>(
+                enterTransition = { EnterTransition.None },
+                exitTransition = { ExitTransition.None },
+            ) {
                 val viewModel = koinViewModel<LearningViewModel>()
                 val state by viewModel.listState.collectAsStateWithLifecycle()
                 LearningListScreen(
@@ -72,7 +84,10 @@ fun AppNavHost() {
                 )
             }
 
-            composable<Objectifs> {
+            composable<Objectifs>(
+                enterTransition = { EnterTransition.None },
+                exitTransition = { ExitTransition.None },
+            ) {
                 val viewModel = koinViewModel<GoalViewModel>()
                 val state by viewModel.listState.collectAsStateWithLifecycle()
                 GoalListScreen(
@@ -82,7 +97,17 @@ fun AppNavHost() {
                 )
             }
 
-            composable<Profil> { ComingSoonScreen(title = "Profil") }
+            composable<Profil>(
+                enterTransition = { EnterTransition.None },
+                exitTransition = { ExitTransition.None },
+            ) {
+                val viewModel = koinViewModel<ProfileViewModel>()
+                val state by viewModel.uiState.collectAsStateWithLifecycle()
+                ProfileScreen(
+                    state = state,
+                    onResetData = viewModel::onResetData,
+                )
+            }
 
             composable<GoalDetailRoute> { entry ->
                 val goalId = entry.toRoute<GoalDetailRoute>().goalId
@@ -130,6 +155,16 @@ fun AppNavHost() {
                     )
                 }
             }
+        }
+
+        // On iOS the leading-edge back swipe is always active and would otherwise
+        // pop the current tab off the stack (feeling like "swipe to change tab").
+        // While a top-level tab is showing, swallow it so tabs are tap-only.
+        // Registered after NavHost so it takes priority over Navigation's own back
+        // handling. On Android swallowTabBackGesture is false, so this stays off and
+        // the system back gesture keeps working as before.
+        BackHandler(enabled = swallowTabBackGesture && showBar) {
+            // Intentionally do nothing: consume the gesture without navigating.
         }
 
         if (showBar) {
