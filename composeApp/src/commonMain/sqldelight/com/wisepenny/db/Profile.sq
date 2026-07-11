@@ -1,0 +1,24 @@
+-- Single-row table (id is always 1): the user's onboarding profile. Holds the
+-- motivation, currency, and consent choices captured in the wizard, the sign-up
+-- date, and the flag the startup gate reads. Plain INSERT OR REPLACE, like ModuleProgress.
+CREATE TABLE Profile (
+    id INTEGER NOT NULL PRIMARY KEY,
+    motivation TEXT NOT NULL,
+    createdDate TEXT NOT NULL,
+    onboardingCompleted INTEGER NOT NULL DEFAULT 0,
+    currency TEXT NOT NULL DEFAULT 'EUR',
+    notificationsOptIn INTEGER NOT NULL DEFAULT 0,
+    bankLinked INTEGER NOT NULL DEFAULT 0
+);
+
+selectProfile:
+SELECT *
+FROM Profile
+WHERE id = 1;
+
+upsertProfile:
+INSERT OR REPLACE INTO Profile(id, motivation, createdDate, onboardingCompleted, currency, notificationsOptIn, bankLinked)
+VALUES (1, :motivation, :createdDate, :onboardingCompleted, :currency, :notificationsOptIn, :bankLinked);
+
+deleteAll:
+DELETE FROM Profile;
