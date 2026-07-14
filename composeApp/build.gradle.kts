@@ -62,6 +62,10 @@ kotlin {
         commonTest.dependencies {
             implementation(libs.kotlin.test)
         }
+        androidUnitTest.dependencies {
+            // In-memory JDBC SQLite driver so repository tests can run on the local JVM.
+            implementation(libs.sqldelight.sqlite.driver)
+        }
     }
 }
 
