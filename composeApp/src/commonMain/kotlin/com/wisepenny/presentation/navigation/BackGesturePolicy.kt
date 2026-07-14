@@ -1,5 +1,7 @@
 package com.wisepenny.presentation.navigation
 
+import androidx.compose.runtime.Composable
+
 /**
  * Whether the platform's leading-edge swipe-back gesture should be swallowed
  * while a top-level tab is showing.
@@ -13,3 +15,10 @@ package com.wisepenny.presentation.navigation
  * walks the back stack as before.
  */
 expect val swallowTabBackGesture: Boolean
+
+/**
+ * A platform-agnostic back handler. On Android, this hooks into the system back button/gesture.
+ * On iOS, this is used to consume the always-on leading-edge swipe when [enabled] is true.
+ */
+@Composable
+expect fun BackHandler(enabled: Boolean = true, onBack: () -> Unit)
