@@ -34,6 +34,16 @@ dependencies {
     implementation(libs.ktor.server.call.logging)
     implementation(libs.logback.classic)
 
+    // Persistence — Exposed 1.x (JDBC) + Hikari pool + PostgreSQL driver.
+    implementation(libs.exposed.core)
+    implementation(libs.exposed.jdbc)
+    implementation(libs.exposed.java.time)
+    implementation(libs.hikaricp)
+    runtimeOnly(libs.postgresql)
+
+    // Password hashing for the demo user / auth (BCrypt).
+    implementation(libs.bcrypt)
+
     testImplementation(libs.ktor.server.test.host)
     testImplementation(libs.kotlin.test)
 }

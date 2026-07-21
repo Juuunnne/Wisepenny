@@ -1,5 +1,7 @@
 package com.wisepenny.server
 
+import com.wisepenny.server.db.DatabaseFactory
+import com.wisepenny.server.db.DevSeeder
 import com.wisepenny.server.plugins.configureMonitoring
 import com.wisepenny.server.plugins.configureSerialization
 import com.wisepenny.server.plugins.configureStatusPages
@@ -24,5 +26,15 @@ fun Application.module() {
     configureSerialization()
     configureMonitoring()
     configureStatusPages()
+
+    val database = DatabaseFactory.init(this)
+    if (isDevEnvironment()) {
+        DevSeeder.seed(database)
+    }
+
     healthRoutes()
 }
+
+/** The demo seeder runs only here, never against a real/prod database. */
+private fun Application.isDevEnvironment(): Boolean =
+    environment.config.propertyOrNull("app.environment")?.getString() == "dev"
