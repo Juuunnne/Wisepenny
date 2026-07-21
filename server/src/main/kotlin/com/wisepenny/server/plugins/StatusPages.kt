@@ -4,6 +4,7 @@ import io.ktor.http.HttpStatusCode
 import io.ktor.server.application.Application
 import io.ktor.server.application.install
 import io.ktor.server.application.log
+import io.ktor.server.plugins.BadRequestException
 import io.ktor.server.plugins.statuspages.StatusPages
 import io.ktor.server.response.respond
 import kotlinx.serialization.Serializable
@@ -22,9 +23,24 @@ class ValidationException(message: String) : RuntimeException(message)
  */
 class NotFoundException(message: String) : RuntimeException(message)
 
+/** 401 — credentials are missing or invalid. */
+class UnauthorizedException(message: String) : RuntimeException(message)
+
 /** Maps exceptions to the shared [ApiError] envelope so every failure looks the same. */
 fun Application.configureStatusPages() {
     install(StatusPages) {
+        exception<UnauthorizedException> { call, cause ->
+            call.respond(
+                HttpStatusCode.Unauthorized,
+                ApiError("UNAUTHORIZED", cause.message ?: "Unauthorized"),
+            )
+        }
+        exception<BadRequestException> { call, cause ->
+            call.respond(
+                HttpStatusCode.BadRequest,
+                ApiError("BAD_REQUEST", cause.message ?: "Malformed request"),
+            )
+        }
         exception<ValidationException> { call, cause ->
             call.respond(
                 HttpStatusCode.UnprocessableEntity,
