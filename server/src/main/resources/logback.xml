@@ -1,0 +1,12 @@
+<configuration>
+    <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder>
+            <pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n</pattern>
+        </encoder>
+    </appender>
+    <root level="INFO">
+        <appender-ref ref="STDOUT" />
+    </root>
+    <!-- Netty is chatty at INFO; keep it to warnings and above. -->
+    <logger name="io.netty" level="WARN" />
+</configuration>
