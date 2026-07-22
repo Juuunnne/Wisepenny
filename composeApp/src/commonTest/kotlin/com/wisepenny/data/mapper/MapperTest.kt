@@ -73,6 +73,7 @@ class MapperTest {
     fun profileRow_mapsBooleanFlagsFromIntegers() {
         val row = ProfileRow(
             id = 1L,
+            firstName = "Alex",
             motivation = "Économiser pour un voyage",
             createdDate = "2026-03-10",
             onboardingCompleted = 1L,
