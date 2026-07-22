@@ -18,6 +18,7 @@ import io.ktor.http.HttpStatusCode
 import io.ktor.http.contentType
 import io.ktor.serialization.kotlinx.json.json
 import io.ktor.server.config.MapApplicationConfig
+import kotlinx.serialization.json.Json
 import io.ktor.server.testing.ApplicationTestBuilder
 import io.ktor.server.testing.testApplication
 import java.math.BigDecimal
@@ -173,7 +174,8 @@ class ApiTest {
     }
 
     private fun ApplicationTestBuilder.jsonClient(): HttpClient = createClient {
-        install(ContentNegotiation) { json() }
+        // Our client views only assert on a subset of fields, so tolerate the rest.
+        install(ContentNegotiation) { json(Json { ignoreUnknownKeys = true }) }
     }
 
     private suspend fun HttpClient.login(
