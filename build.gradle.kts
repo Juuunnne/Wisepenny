@@ -6,4 +6,8 @@ plugins {
     alias(libs.plugins.composeMultiplatform) apply false
     alias(libs.plugins.composeCompiler) apply false
     alias(libs.plugins.kotlinMultiplatform) apply false
+    // Declared once here so the :server module can apply them without the Kotlin
+    // plugin classpath clashing with :composeApp's multiplatform plugin.
+    alias(libs.plugins.kotlinJvm) apply false
+    alias(libs.plugins.kotlinxSerialization) apply false
 }
