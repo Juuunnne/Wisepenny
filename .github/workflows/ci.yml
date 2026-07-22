@@ -40,6 +40,11 @@ jobs:
       - name: Run unit tests
         run: ./gradlew :composeApp:testDebugUnitTest --stacktrace
 
+      # Server integration tests. Testcontainers starts a throwaway PostgreSQL via the
+      # Docker daemon that ubuntu-latest runners provide out of the box — no extra setup.
+      - name: Run server integration tests
+        run: ./gradlew :server:test --stacktrace
+
       # Keeps the HTML/XML reports even when a test fails, for inspection.
       - name: Upload test reports
         if: always()
@@ -47,4 +52,12 @@ jobs:
         with:
           name: unit-test-reports
           path: composeApp/build/reports/tests/
+          if-no-files-found: ignore
+
+      - name: Upload server test reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: server-test-reports
+          path: server/build/reports/tests/
           if-no-files-found: ignore
