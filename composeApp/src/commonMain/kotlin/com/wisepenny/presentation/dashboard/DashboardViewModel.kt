@@ -4,9 +4,11 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.wisepenny.domain.model.Challenge
 import com.wisepenny.domain.model.Goal
+import com.wisepenny.domain.model.Profile
 import com.wisepenny.domain.repository.ChallengeRepository
 import com.wisepenny.domain.repository.ContributionRepository
 import com.wisepenny.domain.repository.GoalRepository
+import com.wisepenny.domain.repository.ProfileRepository
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
@@ -23,6 +25,7 @@ class DashboardViewModel(
     goalRepository: GoalRepository,
     challengeRepository: ChallengeRepository,
     contributionRepository: ContributionRepository,
+    profileRepository: ProfileRepository,
 ) : ViewModel() {
 
     private val thisMonthStart: LocalDate = today().let { LocalDate(it.year, it.month, 1) }
@@ -34,8 +37,9 @@ class DashboardViewModel(
         challengeRepository.observeActiveChallenges(),
         contributionRepository.observeSumBetween(thisMonthStart, nextMonthStart),
         contributionRepository.observeSumBetween(lastMonthStart, thisMonthStart),
-    ) { goals, challenges, savedThisMonth, savedLastMonth ->
-        buildState(goals, challenges, savedThisMonth, savedLastMonth)
+        profileRepository.observe(),
+    ) { goals, challenges, savedThisMonth, savedLastMonth, profile ->
+        buildState(goals, challenges, savedThisMonth, savedLastMonth, profile)
     }.stateIn(
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(5_000),
@@ -47,6 +51,7 @@ class DashboardViewModel(
         challenges: List<Challenge>,
         savedThisMonth: Long,
         savedLastMonth: Long,
+        profile: Profile?,
     ): DashboardUiState {
         val delta = if (savedLastMonth > 0) {
             val pct = (savedThisMonth - savedLastMonth) * 100 / savedLastMonth
@@ -55,8 +60,8 @@ class DashboardViewModel(
             null
         }
         return DashboardUiState(
-            greetingName = GREETING_NAME,
-            avatarInitials = AVATAR_INITIALS,
+            greetingName = greetingNameFrom(profile),
+            avatarInitials = initialsFrom(profile),
             savedThisMonthLabel = formatEuros(savedThisMonth),
             monthlyDeltaLabel = delta,
             monthlyObjectiveLabel = "Objectif mensuel : ${formatEuros(MONTHLY_OBJECTIVE_CENTS)}",
@@ -100,16 +105,26 @@ class DashboardViewModel(
         Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()).date
 
     companion object {
-        // Placeholders until onboarding/profile and the global-streak story land.
-        private const val GREETING_NAME = "Léa"
-        private const val AVATAR_INITIALS = "LM"
+        // Streak values remain fixed placeholders until the global-streak story lands.
         private const val MONTHLY_OBJECTIVE_CENTS = 200_00L
         private const val STREAK_DAYS = 5
         private const val STREAK_TOTAL = 7
 
+        /** The greeting name from the real profile; blank when it's absent or unset. */
+        private fun greetingNameFrom(profile: Profile?): String =
+            profile?.firstName?.trim().orEmpty()
+
+        /** Up to two uppercase initials derived from the first name; empty when unset. */
+        private fun initialsFrom(profile: Profile?): String =
+            profile?.firstName?.trim().orEmpty()
+                .split(Regex("\\s+"))
+                .filter { it.isNotBlank() }
+                .take(2)
+                .joinToString("") { it.first().uppercaseChar().toString() }
+
         private val EmptyState = DashboardUiState(
-            greetingName = GREETING_NAME,
-            avatarInitials = AVATAR_INITIALS,
+            greetingName = "",
+            avatarInitials = "",
             savedThisMonthLabel = "0 €",
             monthlyDeltaLabel = null,
             monthlyObjectiveLabel = "Objectif mensuel : 200 €",

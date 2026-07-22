@@ -8,7 +8,8 @@ CREATE TABLE Profile (
     onboardingCompleted INTEGER NOT NULL DEFAULT 0,
     currency TEXT NOT NULL DEFAULT 'EUR',
     notificationsOptIn INTEGER NOT NULL DEFAULT 0,
-    bankLinked INTEGER NOT NULL DEFAULT 0
+    bankLinked INTEGER NOT NULL DEFAULT 0,
+    firstName TEXT NOT NULL DEFAULT ''
 );
 
 selectProfile:
@@ -17,8 +18,8 @@ FROM Profile
 WHERE id = 1;
 
 upsertProfile:
-INSERT OR REPLACE INTO Profile(id, motivation, createdDate, onboardingCompleted, currency, notificationsOptIn, bankLinked)
-VALUES (1, :motivation, :createdDate, :onboardingCompleted, :currency, :notificationsOptIn, :bankLinked);
+INSERT OR REPLACE INTO Profile(id, motivation, createdDate, onboardingCompleted, currency, notificationsOptIn, bankLinked, firstName)
+VALUES (1, :motivation, :createdDate, :onboardingCompleted, :currency, :notificationsOptIn, :bankLinked, :firstName);
 
 deleteAll:
 DELETE FROM Profile;

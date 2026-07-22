@@ -47,6 +47,7 @@ data class OnboardingUiState(
     val step: OnboardingStep = OnboardingStep.WELCOME,
     val currency: String = "EUR",
     val motivation: OnboardingMotivation? = null,
+    val firstName: String = "",
     val name: String = "",
     val amountText: String = "",
     val horizonMonths: Int = 12,
@@ -100,6 +101,8 @@ class OnboardingViewModel(
 
     fun onMotivationSelect(motivation: OnboardingMotivation) =
         _state.update { it.copy(motivation = motivation) }
+
+    fun onFirstNameChange(value: String) = _state.update { it.copy(firstName = value) }
 
     fun onNameChange(value: String) = _state.update { it.copy(name = value) }
 
@@ -167,6 +170,7 @@ class OnboardingViewModel(
                 goalRepository.setAutoSave(goalId, s.monthlyCents, SavingsCadence.MONTHLY, today)
             }
             profileRepository.save(
+                firstName = s.firstName.trim(),
                 motivation = s.motivation?.label ?: "",
                 createdDate = today,
                 onboardingCompleted = true,

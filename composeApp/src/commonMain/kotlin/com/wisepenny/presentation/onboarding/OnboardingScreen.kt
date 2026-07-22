@@ -52,6 +52,7 @@ fun OnboardingRoot() {
         state = state,
         onCurrencySelect = viewModel::onCurrencySelect,
         onMotivationSelect = viewModel::onMotivationSelect,
+        onFirstNameChange = viewModel::onFirstNameChange,
         onNameChange = viewModel::onNameChange,
         onAmountChange = viewModel::onAmountChange,
         onHorizonSelect = viewModel::onHorizonSelect,
@@ -66,6 +67,7 @@ fun OnboardingScreen(
     state: OnboardingUiState,
     onCurrencySelect: (String) -> Unit,
     onMotivationSelect: (OnboardingMotivation) -> Unit,
+    onFirstNameChange: (String) -> Unit,
     onNameChange: (String) -> Unit,
     onAmountChange: (String) -> Unit,
     onHorizonSelect: (Int) -> Unit,
@@ -91,7 +93,7 @@ fun OnboardingScreen(
             verticalArrangement = Arrangement.spacedBy(Spacing.lg),
         ) {
             when (state.step) {
-                OnboardingStep.WELCOME -> WelcomeContent()
+                OnboardingStep.WELCOME -> WelcomeStep(state, onFirstNameChange)
                 OnboardingStep.CURRENCY -> CurrencyStep(state, onCurrencySelect)
                 OnboardingStep.MOTIVATION -> MotivationStep(state, onMotivationSelect)
                 OnboardingStep.GOAL -> GoalStep(state, onNameChange, onAmountChange)
@@ -163,6 +165,22 @@ private fun primaryLabel(state: OnboardingUiState): String = when (state.step) {
 private fun skipLabel(state: OnboardingUiState): String = when (state.step) {
     OnboardingStep.NOTIFICATIONS -> "Plus tard"
     else -> "Ignorer pour l'instant"
+}
+
+/**
+ * The wizard's first step: the brand intro plus an optional first-name field. The
+ * name feeds the dashboard greeting; left blank, the greeting falls back to a neutral
+ * label. Kept separate from [WelcomeContent] so the Profil "Revoir l'introduction"
+ * overlay reuses the intro without showing an input.
+ */
+@Composable
+private fun WelcomeStep(state: OnboardingUiState, onFirstNameChange: (String) -> Unit) {
+    WelcomeContent()
+    WisepennyTextField(
+        value = state.firstName,
+        onValueChange = onFirstNameChange,
+        placeholder = "Ton prénom (facultatif)",
+    )
 }
 
 /**
@@ -517,6 +535,7 @@ private fun OnboardingPreviewStepPreview() {
             ),
             onCurrencySelect = {},
             onMotivationSelect = {},
+            onFirstNameChange = {},
             onNameChange = {},
             onAmountChange = {},
             onHorizonSelect = {},

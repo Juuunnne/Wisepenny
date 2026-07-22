@@ -117,7 +117,7 @@ private fun DashboardHeader(name: String, initials: String) {
             )
         }
         Text(
-            text = "Bonjour $name",
+            text = "Bonjour $name".trimEnd(),
             style = MaterialTheme.typography.titleMedium,
             color = WisepennyColors.TextPrimary,
             textAlign = TextAlign.Center,
@@ -431,8 +431,8 @@ private fun DashboardScreenPreview() {
     WisepennyTheme {
         DashboardScreen(
             state = DashboardUiState(
-                greetingName = "Léa",
-                avatarInitials = "LM",
+                greetingName = "Alex",
+                avatarInitials = "A",
                 savedThisMonthLabel = "127 €",
                 monthlyDeltaLabel = "+18% vs mois dernier",
                 monthlyObjectiveLabel = "Objectif mensuel : 200 €",

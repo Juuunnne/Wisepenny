@@ -7,6 +7,7 @@ import kotlinx.datetime.LocalDate
  * wizard completes. [onboardingCompleted] drives the startup gate in [com.wisepenny.App].
  */
 data class Profile(
+    val firstName: String,
     val motivation: String,
     val createdDate: LocalDate,
     val onboardingCompleted: Boolean,

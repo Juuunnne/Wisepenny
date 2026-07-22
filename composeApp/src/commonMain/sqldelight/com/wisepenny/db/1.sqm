@@ -1,0 +1,4 @@
+-- Migration v1 -> v2: add the user's first name, captured during onboarding and
+-- shown in the dashboard greeting. Non-destructive: existing rows keep an empty
+-- default. See docs/mise-a-jour.md for the schema-migration rule.
+ALTER TABLE Profile ADD COLUMN firstName TEXT NOT NULL DEFAULT '';

@@ -10,6 +10,7 @@ interface ProfileRepository {
     fun observe(): Flow<Profile?>
 
     suspend fun save(
+        firstName: String,
         motivation: String,
         createdDate: LocalDate,
         onboardingCompleted: Boolean,

@@ -5,6 +5,7 @@ import kotlinx.datetime.LocalDate
 import com.wisepenny.db.Profile as ProfileRow
 
 fun ProfileRow.toDomain(): Profile = Profile(
+    firstName = firstName,
     motivation = motivation,
     createdDate = LocalDate.parse(createdDate),
     onboardingCompleted = onboardingCompleted == 1L,

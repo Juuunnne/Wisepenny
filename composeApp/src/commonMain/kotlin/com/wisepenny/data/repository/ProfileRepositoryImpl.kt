@@ -25,6 +25,7 @@ class ProfileRepositoryImpl(
         .map { row -> row?.toDomain() }
 
     override suspend fun save(
+        firstName: String,
         motivation: String,
         createdDate: LocalDate,
         onboardingCompleted: Boolean,
@@ -40,6 +41,7 @@ class ProfileRepositoryImpl(
                 currency = currency,
                 notificationsOptIn = if (notificationsOptIn) 1L else 0L,
                 bankLinked = if (bankLinked) 1L else 0L,
+                firstName = firstName,
             )
         }
     }
