@@ -52,3 +52,12 @@ dependencies {
     testImplementation(libs.testcontainers)
     testImplementation(libs.testcontainers.postgresql)
 }
+
+tasks.test {
+    // Print each test (name + pass/fail) to the console, with full stack traces on failure.
+    testLogging {
+        events("passed", "skipped", "failed")
+        exceptionFormat = org.gradle.api.tasks.testing.logging.TestExceptionFormat.FULL
+        showStandardStreams = false
+    }
+}
