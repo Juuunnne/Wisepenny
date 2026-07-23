@@ -1,3 +1,4 @@
+import io.gitlab.arturbosch.detekt.Detekt
 import io.gitlab.arturbosch.detekt.extensions.DetektExtension
 import org.jlleitschuh.gradle.ktlint.KtlintExtension
 
@@ -31,5 +32,14 @@ subprojects {
     }
     configure<KtlintExtension> {
         ignoreFailures.set(true)
+    }
+
+    // The default detekt task looks for src/main/kotlin, which KMP modules don't have
+    // (they use commonMain/androidMain/iosMain). Point it at the whole src/ tree so the
+    // Compose app is actually analysed instead of being reported as NO-SOURCE.
+    tasks.withType<Detekt>().configureEach {
+        setSource(files(projectDir.resolve("src")))
+        include("**/*.kt", "**/*.kts")
+        exclude("**/build/**", "**/resources/**")
     }
 }
