@@ -1,0 +1,31 @@
+# Overrides applied on top of Detekt's default rules (buildUponDefaultConfig = true).
+# Only list what you want to change here — everything else uses Detekt defaults.
+
+# Formatting is owned by ktlint, so keep Detekt's formatting ruleset off to avoid
+# overlapping / conflicting rules. (This ruleset also needs the detekt-formatting
+# dependency to run at all, which we haven't added.)
+formatting:
+  active: false
+
+style:
+  MagicNumber:
+    # Very noisy in UI code (paddings, weights, sizes). Re-enable later if wanted.
+    active: false
+  ReturnCount:
+    active: true
+    max: 4
+  MaxLineLength:
+    maxLineLength: 120
+
+complexity:
+  LongMethod:
+    active: true
+    threshold: 80
+  TooManyFunctions:
+    # Screens and ViewModels legitimately group many small functions.
+    active: false
+
+naming:
+  FunctionNaming:
+    # Allow @Composable PascalCase functions.
+    ignoreAnnotated: ['Composable']
