@@ -13,6 +13,7 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.launch
 import kotlin.time.Clock
 import kotlinx.datetime.DateTimeUnit
 import kotlinx.datetime.LocalDate
@@ -23,7 +24,7 @@ import kotlinx.datetime.toLocalDateTime
 
 class DashboardViewModel(
     goalRepository: GoalRepository,
-    challengeRepository: ChallengeRepository,
+    private val challengeRepository: ChallengeRepository,
     contributionRepository: ContributionRepository,
     profileRepository: ProfileRepository,
 ) : ViewModel() {
@@ -70,7 +71,27 @@ class DashboardViewModel(
             streakTotal = STREAK_TOTAL,
             goals = goals.map { it.toDashboardGoal() },
             activeChallenges = challenges.map { it.toDashboardChallenge() },
+            // The proposed "défi du jour" is only offered when nothing is running.
+            // Accepting it creates a challenge, which hides the card again.
+            showDailyChallenge = challenges.isEmpty(),
         )
+    }
+
+    /**
+     * Accepts the proposed daily challenge. Creating it makes [showDailyChallenge]
+     * false on the next emission, so the proposal card disappears and the challenge
+     * shows up under "Défis actifs".
+     */
+    fun onAcceptDailyChallenge() {
+        viewModelScope.launch {
+            challengeRepository.create(
+                title = DAILY_CHALLENGE_TITLE,
+                subtitle = DAILY_CHALLENGE_SUBTITLE,
+                dailyAmountCents = DAILY_CHALLENGE_CENTS,
+                totalDays = DAILY_CHALLENGE_DAYS,
+                startDate = today(),
+            )
+        }
     }
 
     private fun Goal.toDashboardGoal(): DashboardGoalItem {
@@ -110,6 +131,12 @@ class DashboardViewModel(
         private const val STREAK_DAYS = 5
         private const val STREAK_TOTAL = 7
 
+        // The proposed daily challenge offered by the dashboard card.
+        private const val DAILY_CHALLENGE_TITLE = "Économise le prix d'un café"
+        private const val DAILY_CHALLENGE_SUBTITLE = "Mets 3 € de côté chaque jour"
+        private const val DAILY_CHALLENGE_CENTS = 300L
+        private const val DAILY_CHALLENGE_DAYS = 7
+
         /** The greeting name from the real profile; blank when it's absent or unset. */
         private fun greetingNameFrom(profile: Profile?): String =
             profile?.firstName?.trim().orEmpty()
@@ -133,6 +160,8 @@ class DashboardViewModel(
             streakTotal = STREAK_TOTAL,
             goals = emptyList(),
             activeChallenges = emptyList(),
+            // Stays false while loading so the card can't flash before data arrives.
+            showDailyChallenge = false,
         )
 
         private fun iconKeyForChallenge(title: String): String = when {

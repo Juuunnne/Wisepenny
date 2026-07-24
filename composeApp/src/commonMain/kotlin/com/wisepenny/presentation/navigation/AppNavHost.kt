@@ -68,6 +68,7 @@ fun AppNavHost() {
                     state = state,
                     onGoalClick = { navController.navigate(GoalDetailRoute(it)) },
                     onChallengeClick = { navController.navigate(ChallengeDetailRoute(it)) },
+                    onAcceptChallenge = viewModel::onAcceptDailyChallenge,
                 )
             }
 

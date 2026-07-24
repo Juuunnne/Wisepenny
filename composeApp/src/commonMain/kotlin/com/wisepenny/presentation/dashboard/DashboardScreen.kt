@@ -50,6 +50,7 @@ data class DashboardUiState(
     val streakTotal: Int,
     val goals: List<DashboardGoalItem>,
     val activeChallenges: List<DashboardChallengeItem>,
+    val showDailyChallenge: Boolean,
 )
 
 data class DashboardGoalItem(
@@ -75,6 +76,7 @@ fun DashboardScreen(
     state: DashboardUiState,
     onGoalClick: (Long) -> Unit,
     onChallengeClick: (Long) -> Unit,
+    onAcceptChallenge: () -> Unit,
 ) {
     WisepennyScaffold(verticalArrangement = Arrangement.spacedBy(Spacing.xl)) {
         WisepennyScreenHeader(
@@ -97,7 +99,9 @@ fun DashboardScreen(
         StreakCard(days = state.streakDays, total = state.streakTotal)
         GoalsSection(goals = state.goals, onGoalClick = onGoalClick)
         ChallengesSection(challenges = state.activeChallenges, onChallengeClick = onChallengeClick)
-        PromoCard()
+        if (state.showDailyChallenge) {
+            PromoCard(onAccept = onAcceptChallenge)
+        }
     }
 }
 
@@ -323,7 +327,7 @@ private fun DashboardChallengeRow(challenge: DashboardChallengeItem, onClick: ()
 }
 
 @Composable
-private fun PromoCard() {
+private fun PromoCard(onAccept: () -> Unit) {
     WisepennyCard(
         variant = WisepennyCardVariant.Accent,
         modifier = Modifier.fillMaxWidth(),
@@ -365,7 +369,7 @@ private fun PromoCard() {
             color = WisepennyColors.TextOnLight,
         )
         Button(
-            onClick = { /* TODO: opens the Défi du jour modal in a later step */ },
+            onClick = onAccept,
             colors = ButtonDefaults.buttonColors(
                 containerColor = WisepennyColors.BackgroundPrimary,
                 contentColor = WisepennyColors.AccentMint,
@@ -404,9 +408,11 @@ private fun DashboardScreenPreview() {
                     DashboardChallengeItem(1, "coffee", "7 jours sans café", "Jour 5 sur 7", "71%"),
                     DashboardChallengeItem(2, "shopping", "Pas d'achats impulsifs", "Jour 2 sur 7", "28%"),
                 ),
+                showDailyChallenge = false,
             ),
             onGoalClick = {},
             onChallengeClick = {},
+            onAcceptChallenge = {},
         )
     }
 }
