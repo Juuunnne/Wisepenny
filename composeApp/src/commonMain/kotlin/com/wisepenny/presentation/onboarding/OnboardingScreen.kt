@@ -39,6 +39,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.wisepenny.presentation.goal.goalEmoji
 import com.wisepenny.presentation.theme.Spacing
 import com.wisepenny.presentation.theme.WisepennyColors
+import com.wisepenny.presentation.theme.WisepennyShapes
 import com.wisepenny.presentation.theme.WisepennyTheme
 import kotlinx.datetime.LocalDate
 import org.koin.compose.viewmodel.koinViewModel
@@ -126,7 +127,7 @@ fun OnboardingScreen(
                 Button(
                     onClick = onNext,
                     enabled = state.canProceed,
-                    shape = RoundedCornerShape(16.dp),
+                    shape = WisepennyShapes.small,
                     colors = ButtonDefaults.buttonColors(
                         containerColor = WisepennyColors.AccentMint,
                         contentColor = WisepennyColors.TextOnLight,
@@ -229,7 +230,7 @@ private fun CurrencyStep(state: OnboardingUiState, onCurrencySelect: (String) ->
     Box(
         modifier = Modifier
             .fillMaxWidth()
-            .clip(RoundedCornerShape(24.dp))
+            .clip(WisepennyShapes.large)
             .background(WisepennyColors.SurfaceElevated)
             .padding(Spacing.xl),
         contentAlignment = Alignment.Center,
@@ -325,7 +326,7 @@ private fun PreviewStep(state: OnboardingUiState, onHorizonSelect: (Int) -> Unit
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .clip(RoundedCornerShape(24.dp))
+            .clip(WisepennyShapes.large)
             .background(WisepennyColors.AccentMintSoft)
             .padding(Spacing.xl),
         verticalArrangement = Arrangement.spacedBy(Spacing.xs),
@@ -419,9 +420,9 @@ private fun SelectChip(
     val borderColor = if (selected) WisepennyColors.AccentMint else WisepennyColors.BorderSubtle
     Box(
         modifier = modifier
-            .clip(RoundedCornerShape(16.dp))
+            .clip(WisepennyShapes.small)
             .background(container)
-            .border(1.dp, borderColor, RoundedCornerShape(16.dp))
+            .border(1.dp, borderColor, WisepennyShapes.small)
             .clickable(onClick = onClick)
             .padding(horizontal = Spacing.md, vertical = Spacing.md),
         contentAlignment = Alignment.Center,
@@ -465,7 +466,7 @@ private fun WisepennyTextField(
         singleLine = true,
         keyboardOptions = KeyboardOptions(keyboardType = keyboardType),
         textStyle = MaterialTheme.typography.bodyMedium,
-        shape = RoundedCornerShape(16.dp),
+        shape = WisepennyShapes.small,
         colors = OutlinedTextFieldDefaults.colors(
             focusedTextColor = WisepennyColors.TextPrimary,
             unfocusedTextColor = WisepennyColors.TextPrimary,

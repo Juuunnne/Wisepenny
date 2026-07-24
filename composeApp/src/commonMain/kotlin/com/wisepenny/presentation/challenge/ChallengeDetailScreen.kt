@@ -5,6 +5,7 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -13,17 +14,11 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.IosShare
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.CenterAlignedTopAppBar
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.outlined.IosShare
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -31,20 +26,22 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.wisepenny.presentation.components.WisepennyCard
+import com.wisepenny.presentation.components.WisepennyCardVariant
+import com.wisepenny.presentation.components.WisepennyTopBar
 import com.wisepenny.presentation.theme.Spacing
 import com.wisepenny.presentation.theme.WisepennyColors
+import com.wisepenny.presentation.theme.WisepennyShapes
 import com.wisepenny.presentation.theme.WisepennyTheme
 
 data class ChallengeUiState(
@@ -74,8 +71,22 @@ fun ChallengeDetailScreen(
     onShare: () -> Unit,
 ) {
     Scaffold(
-        topBar = { ChallengeTopBar(onBack = onBack, onShare = onShare) },
-        containerColor = MaterialTheme.colorScheme.background,
+        topBar = {
+            WisepennyTopBar(
+                title = "Mon défi",
+                onBack = onBack,
+                actions = {
+                    IconButton(onClick = onShare) {
+                        Icon(
+                            imageVector = Icons.Outlined.IosShare,
+                            contentDescription = "Partager",
+                            tint = WisepennyColors.TextPrimary,
+                        )
+                    }
+                },
+            )
+        },
+        containerColor = WisepennyColors.BackgroundPrimary,
     ) { innerPadding ->
         Column(
             modifier = Modifier
@@ -111,48 +122,6 @@ fun ChallengeDetailScreen(
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-private fun ChallengeTopBar(onBack: () -> Unit, onShare: () -> Unit) {
-    CenterAlignedTopAppBar(
-        colors = TopAppBarDefaults.topAppBarColors(
-            containerColor = WisepennyColors.BackgroundPrimary,
-            titleContentColor = WisepennyColors.TextPrimary,
-            navigationIconContentColor = WisepennyColors.TextPrimary,
-            actionIconContentColor = WisepennyColors.TextPrimary,
-        ),
-        title = {
-            Text(
-                text = "MON DÉFI",
-                style = MaterialTheme.typography.labelSmall,
-                fontWeight = FontWeight.Bold,
-            )
-        },
-        navigationIcon = {
-            IconButton(
-                onClick = onBack,
-                modifier = Modifier.clearAndSetSemantics { contentDescription = "Retour" },
-            ) {
-                Icon(
-                    imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                    contentDescription = null,
-                )
-            }
-        },
-        actions = {
-            IconButton(
-                onClick = onShare,
-                modifier = Modifier.clearAndSetSemantics { contentDescription = "Partager" },
-            ) {
-                Icon(
-                    imageVector = Icons.Outlined.IosShare,
-                    contentDescription = null,
-                )
-            }
-        },
-    )
-}
-
 @Composable
 private fun HeroCard(
     title: String,
@@ -161,36 +130,30 @@ private fun HeroCard(
     currentDay: Int,
     totalDays: Int,
 ) {
-    Card(
-        colors = CardDefaults.cardColors(containerColor = WisepennyColors.AccentMint),
-        shape = RoundedCornerShape(24.dp),
+    WisepennyCard(
+        variant = WisepennyCardVariant.Accent,
         modifier = Modifier.fillMaxWidth(),
     ) {
-        Column(
-            modifier = Modifier.padding(Spacing.xl),
-            verticalArrangement = Arrangement.spacedBy(Spacing.sm),
-        ) {
-            Text(
-                text = "DÉFI EN COURS",
-                style = MaterialTheme.typography.labelSmall,
-                color = WisepennyColors.TextOnLightMuted,
-            )
-            Text(
-                text = title,
-                style = MaterialTheme.typography.displayMedium,
-                color = WisepennyColors.TextOnLight,
-            )
-            Text(
-                text = subtitle,
-                style = MaterialTheme.typography.bodyMedium,
-                color = WisepennyColors.TextOnLight,
-            )
-            DayProgressDots(
-                completedDays = completedDays,
-                currentDay = currentDay,
-                totalDays = totalDays,
-            )
-        }
+        Text(
+            text = "DÉFI EN COURS",
+            style = MaterialTheme.typography.labelSmall,
+            color = WisepennyColors.TextOnLightMuted,
+        )
+        Text(
+            text = title,
+            style = MaterialTheme.typography.displayMedium,
+            color = WisepennyColors.TextOnLight,
+        )
+        Text(
+            text = subtitle,
+            style = MaterialTheme.typography.bodyMedium,
+            color = WisepennyColors.TextOnLight,
+        )
+        DayProgressDots(
+            completedDays = completedDays,
+            currentDay = currentDay,
+            totalDays = totalDays,
+        )
     }
 }
 
@@ -269,29 +232,26 @@ private fun StatCard(
     modifier: Modifier = Modifier,
     valueColor: Color = WisepennyColors.TextPrimary,
 ) {
-    Card(
-        colors = CardDefaults.cardColors(containerColor = WisepennyColors.SurfaceElevated),
-        shape = RoundedCornerShape(16.dp),
+    WisepennyCard(
+        variant = WisepennyCardVariant.Elevated,
+        shape = WisepennyShapes.small,
+        contentPadding = PaddingValues(Spacing.md),
+        verticalArrangement = Arrangement.spacedBy(Spacing.xxs),
+        horizontalAlignment = Alignment.CenterHorizontally,
         modifier = modifier,
     ) {
-        Column(
-            modifier = Modifier.fillMaxWidth().padding(Spacing.md),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(Spacing.xxs),
-        ) {
-            Text(
-                text = value,
-                style = MaterialTheme.typography.titleMedium,
-                color = valueColor,
-                fontWeight = FontWeight.Bold,
-                maxLines = 1,
-            )
-            Text(
-                text = label,
-                style = MaterialTheme.typography.labelSmall,
-                color = WisepennyColors.TextTertiary,
-            )
-        }
+        Text(
+            text = value,
+            style = MaterialTheme.typography.titleMedium,
+            color = valueColor,
+            fontWeight = FontWeight.Bold,
+            maxLines = 1,
+        )
+        Text(
+            text = label,
+            style = MaterialTheme.typography.labelSmall,
+            color = WisepennyColors.TextTertiary,
+        )
     }
 }
 
@@ -343,58 +303,53 @@ private fun TodayActionCard(
     onValidate: () -> Unit,
     onSkip: () -> Unit,
 ) {
-    Card(
-        colors = CardDefaults.cardColors(containerColor = WisepennyColors.SurfaceLight),
-        shape = RoundedCornerShape(24.dp),
+    WisepennyCard(
+        variant = WisepennyCardVariant.Light,
+        verticalArrangement = Arrangement.spacedBy(Spacing.md),
         modifier = Modifier.fillMaxWidth(),
     ) {
-        Column(
-            modifier = Modifier.padding(Spacing.xl),
-            verticalArrangement = Arrangement.spacedBy(Spacing.md),
+        Box(
+            modifier = Modifier
+                .size(40.dp)
+                .clip(CircleShape)
+                .background(WisepennyColors.AccentMintSoft),
+            contentAlignment = Alignment.Center,
         ) {
-            Box(
-                modifier = Modifier
-                    .size(40.dp)
-                    .clip(CircleShape)
-                    .background(WisepennyColors.AccentMintSoft),
-                contentAlignment = Alignment.Center,
-            ) {
-                Text("☕", style = MaterialTheme.typography.titleMedium)
-            }
+            Text("☕", style = MaterialTheme.typography.titleMedium)
+        }
+        Text(
+            text = question,
+            style = MaterialTheme.typography.titleMedium,
+            color = WisepennyColors.TextOnLight,
+            fontWeight = FontWeight.Bold,
+        )
+        Button(
+            onClick = onValidate,
+            colors = ButtonDefaults.buttonColors(
+                containerColor = WisepennyColors.AccentMint,
+                contentColor = WisepennyColors.TextOnLight,
+            ),
+            shape = WisepennyShapes.small,
+            modifier = Modifier.fillMaxWidth().height(56.dp),
+        ) {
             Text(
-                text = question,
-                style = MaterialTheme.typography.titleMedium,
-                color = WisepennyColors.TextOnLight,
-                fontWeight = FontWeight.Bold,
+                text = actionLabel,
+                style = MaterialTheme.typography.bodyMedium,
+                fontWeight = FontWeight.SemiBold,
             )
-            Button(
-                onClick = onValidate,
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = WisepennyColors.AccentMint,
-                    contentColor = WisepennyColors.TextOnLight,
-                ),
-                shape = RoundedCornerShape(16.dp),
-                modifier = Modifier.fillMaxWidth().height(56.dp),
-            ) {
-                Text(
-                    text = actionLabel,
-                    style = MaterialTheme.typography.bodyMedium,
-                    fontWeight = FontWeight.SemiBold,
-                )
-            }
-            OutlinedButton(
-                onClick = onSkip,
-                colors = ButtonDefaults.outlinedButtonColors(
-                    contentColor = WisepennyColors.TextOnLight,
-                ),
-                shape = RoundedCornerShape(16.dp),
-                modifier = Modifier.fillMaxWidth().height(56.dp),
-            ) {
-                Text(
-                    text = "Pas aujourd'hui",
-                    style = MaterialTheme.typography.bodyMedium,
-                )
-            }
+        }
+        OutlinedButton(
+            onClick = onSkip,
+            colors = ButtonDefaults.outlinedButtonColors(
+                contentColor = WisepennyColors.TextOnLight,
+            ),
+            shape = WisepennyShapes.small,
+            modifier = Modifier.fillMaxWidth().height(56.dp),
+        ) {
+            Text(
+                text = "Pas aujourd'hui",
+                style = MaterialTheme.typography.bodyMedium,
+            )
         }
     }
 }
@@ -409,20 +364,20 @@ private fun HistorySection(history: List<HistoryDay>) {
 
 @Composable
 private fun HistoryList(history: List<HistoryDay>) {
-    Card(
-        colors = CardDefaults.cardColors(containerColor = WisepennyColors.SurfaceElevated),
-        shape = RoundedCornerShape(20.dp),
+    WisepennyCard(
+        variant = WisepennyCardVariant.Elevated,
+        shape = WisepennyShapes.medium,
+        contentPadding = PaddingValues(0.dp),
+        verticalArrangement = Arrangement.Top,
         modifier = Modifier.fillMaxWidth(),
     ) {
-        Column {
-            history.forEachIndexed { index, day ->
-                HistoryRow(day = day.dayLabel, amount = day.amount)
-                if (index < history.lastIndex) {
-                    HorizontalDivider(
-                        color = WisepennyColors.BorderSubtle,
-                        modifier = Modifier.padding(horizontal = Spacing.md),
-                    )
-                }
+        history.forEachIndexed { index, day ->
+            HistoryRow(day = day.dayLabel, amount = day.amount)
+            if (index < history.lastIndex) {
+                HorizontalDivider(
+                    color = WisepennyColors.BorderSubtle,
+                    modifier = Modifier.padding(horizontal = Spacing.md),
+                )
             }
         }
     }

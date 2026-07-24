@@ -2,36 +2,32 @@ package com.wisepenny.presentation.goal
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.wisepenny.presentation.components.SavingsProgressBar
+import com.wisepenny.presentation.components.WisepennyCard
+import com.wisepenny.presentation.components.WisepennyCardVariant
+import com.wisepenny.presentation.components.WisepennyScaffold
+import com.wisepenny.presentation.components.WisepennyScreenHeader
 import com.wisepenny.presentation.theme.Spacing
 import com.wisepenny.presentation.theme.WisepennyColors
+import com.wisepenny.presentation.theme.WisepennyShapes
 import com.wisepenny.presentation.theme.WisepennyTheme
 
 data class GoalListUiState(
@@ -68,37 +64,23 @@ fun GoalListScreen(
     onGoalClick: (Long) -> Unit,
     onAddGoal: () -> Unit,
 ) {
-    Scaffold(containerColor = MaterialTheme.colorScheme.background) { innerPadding ->
-        Column(
+    WisepennyScaffold {
+        WisepennyScreenHeader(title = "Tes Objectifs")
+        state.goals.forEach { goal ->
+            GoalCard(goal = goal, onClick = { onGoalClick(goal.id) })
+        }
+        OutlinedButton(
+            onClick = onAddGoal,
+            shape = WisepennyShapes.small,
             modifier = Modifier
-                .fillMaxSize()
-                .padding(innerPadding)
-                .verticalScroll(rememberScrollState())
-                .padding(horizontal = Spacing.xl)
-                .padding(top = Spacing.xl, bottom = Spacing.xxl),
-            verticalArrangement = Arrangement.spacedBy(Spacing.lg),
+                .align(Alignment.CenterHorizontally)
+                .padding(top = Spacing.sm),
         ) {
             Text(
-                text = "Tes Objectifs",
-                style = MaterialTheme.typography.headlineMedium,
+                text = "+ Ajouter un objectif",
+                style = MaterialTheme.typography.bodyMedium,
                 color = WisepennyColors.TextPrimary,
             )
-            state.goals.forEach { goal ->
-                GoalCard(goal = goal, onClick = { onGoalClick(goal.id) })
-            }
-            OutlinedButton(
-                onClick = onAddGoal,
-                shape = RoundedCornerShape(16.dp),
-                modifier = Modifier
-                    .align(Alignment.CenterHorizontally)
-                    .padding(top = Spacing.sm),
-            ) {
-                Text(
-                    text = "+ Ajouter un objectif",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = WisepennyColors.TextPrimary,
-                )
-            }
         }
     }
 }
@@ -108,70 +90,61 @@ private fun GoalCard(goal: GoalListItem, onClick: () -> Unit) {
     val onCard = if (goal.isPriority) WisepennyColors.TextOnLight else WisepennyColors.TextPrimary
     val mutedOnCard =
         if (goal.isPriority) WisepennyColors.TextOnLightMuted else WisepennyColors.TextTertiary
-    val container =
-        if (goal.isPriority) WisepennyColors.SurfaceLight else WisepennyColors.SurfaceElevated
     val track =
         if (goal.isPriority) WisepennyColors.SurfaceLightAlt else WisepennyColors.BorderSubtle
 
-    Card(
-        colors = CardDefaults.cardColors(containerColor = container),
-        shape = RoundedCornerShape(24.dp),
-        modifier = Modifier
-            .fillMaxWidth()
-            .clip(RoundedCornerShape(24.dp))
-            .clickable(onClick = onClick),
+    WisepennyCard(
+        variant = if (goal.isPriority) WisepennyCardVariant.Light else WisepennyCardVariant.Elevated,
+        onClick = onClick,
+        modifier = Modifier.fillMaxWidth(),
+        verticalArrangement = Arrangement.spacedBy(Spacing.md),
     ) {
-        Column(
-            modifier = Modifier.padding(Spacing.xl),
-            verticalArrangement = Arrangement.spacedBy(Spacing.md),
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(Spacing.sm),
         ) {
+            GoalIcon(iconKey = goal.iconKey, isPriority = goal.isPriority)
+            Text(
+                text = goal.name,
+                style = MaterialTheme.typography.titleMedium,
+                color = onCard,
+                fontWeight = FontWeight.Bold,
+                modifier = Modifier.weight(1f),
+            )
+            if (goal.isPriority) {
+                PriorityPill()
+            }
+        }
+        Row(verticalAlignment = Alignment.Bottom) {
+            Text(
+                text = goal.savedLabel,
+                style = MaterialTheme.typography.displayMedium,
+                color = onCard,
+            )
+            Text(
+                text = " ${goal.targetLabel}",
+                style = MaterialTheme.typography.titleMedium,
+                color = mutedOnCard,
+                modifier = Modifier.padding(bottom = Spacing.xs),
+            )
+        }
+        SavingsProgressBar(progress = goal.progress, trackColor = track)
+        if (goal.isPriority) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(Spacing.sm),
+                horizontalArrangement = Arrangement.SpaceBetween,
             ) {
-                GoalIcon(iconKey = goal.iconKey, isPriority = goal.isPriority)
                 Text(
-                    text = goal.name,
-                    style = MaterialTheme.typography.titleMedium,
-                    color = onCard,
-                    fontWeight = FontWeight.Bold,
-                    modifier = Modifier.weight(1f),
-                )
-                if (goal.isPriority) {
-                    PriorityPill()
-                }
-            }
-            Row(verticalAlignment = Alignment.Bottom) {
-                Text(
-                    text = goal.savedLabel,
-                    style = MaterialTheme.typography.displayMedium,
-                    color = onCard,
-                )
-                Text(
-                    text = " ${goal.targetLabel}",
-                    style = MaterialTheme.typography.titleMedium,
+                    text = goal.percentLabel,
+                    style = MaterialTheme.typography.labelSmall,
                     color = mutedOnCard,
-                    modifier = Modifier.padding(bottom = Spacing.xs),
                 )
-            }
-            SavingsProgressBar(progress = goal.progress, trackColor = track)
-            if (goal.isPriority) {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                ) {
-                    Text(
-                        text = goal.percentLabel,
-                        style = MaterialTheme.typography.labelSmall,
-                        color = mutedOnCard,
-                    )
-                    Text(
-                        text = goal.remainingLabel,
-                        style = MaterialTheme.typography.labelSmall,
-                        color = mutedOnCard,
-                    )
-                }
+                Text(
+                    text = goal.remainingLabel,
+                    style = MaterialTheme.typography.labelSmall,
+                    color = mutedOnCard,
+                )
             }
         }
     }

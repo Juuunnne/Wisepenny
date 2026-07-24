@@ -10,13 +10,11 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -29,10 +27,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.dp
+import com.wisepenny.presentation.components.WisepennyCard
+import com.wisepenny.presentation.components.WisepennyScaffold
+import com.wisepenny.presentation.components.WisepennyScreenHeader
 import com.wisepenny.presentation.onboarding.WelcomeContent
 import com.wisepenny.presentation.theme.Spacing
 import com.wisepenny.presentation.theme.WisepennyColors
+import com.wisepenny.presentation.theme.WisepennyShapes
 import com.wisepenny.presentation.theme.WisepennyTheme
 
 private enum class ProfileOverlay { NONE, REPLAY, RGPD, ABOUT, RESET_CONFIRM }
@@ -44,34 +45,20 @@ fun ProfileScreen(
 ) {
     var overlay by remember { mutableStateOf(ProfileOverlay.NONE) }
 
-    Scaffold(containerColor = MaterialTheme.colorScheme.background) { innerPadding ->
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(innerPadding)
-                .verticalScroll(rememberScrollState())
-                .padding(horizontal = Spacing.xl)
-                .padding(top = Spacing.xl, bottom = Spacing.xxl),
-            verticalArrangement = Arrangement.spacedBy(Spacing.lg),
-        ) {
-            Text(
-                text = "Profil",
-                style = MaterialTheme.typography.headlineMedium,
-                color = WisepennyColors.TextPrimary,
-            )
+    WisepennyScaffold {
+        WisepennyScreenHeader(title = "Profil")
 
-            ProfileCard(state)
+        ProfileCard(state)
 
-            Column(verticalArrangement = Arrangement.spacedBy(Spacing.sm)) {
-                SettingsRow("📖", "Revoir l'introduction") { overlay = ProfileOverlay.REPLAY }
-                SettingsRow("🔒", "Confidentialité (RGPD)") { overlay = ProfileOverlay.RGPD }
-                SettingsRow("ℹ️", "À propos") { overlay = ProfileOverlay.ABOUT }
-                SettingsRow(
-                    emoji = "🗑️",
-                    title = "Réinitialiser mes données",
-                    tint = WisepennyColors.Danger,
-                ) { overlay = ProfileOverlay.RESET_CONFIRM }
-            }
+        Column(verticalArrangement = Arrangement.spacedBy(Spacing.sm)) {
+            SettingsRow("📖", "Revoir l'introduction") { overlay = ProfileOverlay.REPLAY }
+            SettingsRow("🔒", "Confidentialité (RGPD)") { overlay = ProfileOverlay.RGPD }
+            SettingsRow("ℹ️", "À propos") { overlay = ProfileOverlay.ABOUT }
+            SettingsRow(
+                emoji = "🗑️",
+                title = "Réinitialiser mes données",
+                tint = WisepennyColors.Danger,
+            ) { overlay = ProfileOverlay.RESET_CONFIRM }
         }
     }
 
@@ -105,12 +92,8 @@ fun ProfileScreen(
 
 @Composable
 private fun ProfileCard(state: ProfileUiState) {
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clip(RoundedCornerShape(24.dp))
-            .background(WisepennyColors.SurfaceElevated)
-            .padding(Spacing.xl),
+    WisepennyCard(
+        modifier = Modifier.fillMaxWidth(),
         verticalArrangement = Arrangement.spacedBy(Spacing.xs),
     ) {
         Text(
@@ -144,7 +127,7 @@ private fun SettingsRow(
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .clip(RoundedCornerShape(16.dp))
+            .clip(WisepennyShapes.small)
             .background(WisepennyColors.SurfaceElevated)
             .clickable(onClick = onClick)
             .padding(horizontal = Spacing.lg, vertical = Spacing.md),
@@ -179,7 +162,7 @@ private fun ReplayOverlay(onClose: () -> Unit) {
         }
         Button(
             onClick = onClose,
-            shape = RoundedCornerShape(16.dp),
+            shape = WisepennyShapes.small,
             colors = ButtonDefaults.buttonColors(
                 containerColor = WisepennyColors.AccentMint,
                 contentColor = WisepennyColors.TextOnLight,

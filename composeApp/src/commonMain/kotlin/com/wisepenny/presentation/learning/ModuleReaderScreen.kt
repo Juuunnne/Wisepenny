@@ -10,7 +10,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Close
@@ -35,6 +34,7 @@ import androidx.compose.ui.unit.dp
 import com.wisepenny.presentation.components.SavingsProgressBar
 import com.wisepenny.presentation.theme.Spacing
 import com.wisepenny.presentation.theme.WisepennyColors
+import com.wisepenny.presentation.theme.WisepennyShapes
 import com.wisepenny.presentation.theme.WisepennyTheme
 
 data class ModuleReaderUiState(
@@ -69,7 +69,7 @@ fun ModuleReaderScreen(
     val page = uiState.pages[pageIndex]
     val isLast = pageIndex >= uiState.pages.lastIndex
 
-    Scaffold(containerColor = MaterialTheme.colorScheme.background) { innerPadding ->
+    Scaffold(containerColor = WisepennyColors.BackgroundPrimary) { innerPadding ->
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -127,7 +127,7 @@ fun ModuleReaderScreen(
                     onAdvance(pageIndex)
                     if (isLast) onClose() else currentPage = pageIndex + 1
                 },
-                shape = RoundedCornerShape(16.dp),
+                shape = WisepennyShapes.small,
                 colors = ButtonDefaults.buttonColors(
                     containerColor = WisepennyColors.AccentMint,
                     contentColor = WisepennyColors.TextOnLight,
@@ -151,7 +151,7 @@ private fun ExampleCallout(text: String) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .clip(RoundedCornerShape(16.dp))
+            .clip(WisepennyShapes.small)
             .background(WisepennyColors.SurfaceElevated)
             .padding(Spacing.md),
         verticalArrangement = Arrangement.spacedBy(Spacing.xxs),
