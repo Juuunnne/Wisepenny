@@ -14,6 +14,12 @@ style:
     max: 4
   MaxLineLength:
     maxLineLength: 120
+  ForbiddenComment:
+    # TODO markers are expected while the capstone is in progress.
+    active: false
+  UnusedPrivateMember:
+    # @Preview composables are used by the IDE/tooling, not dead code.
+    ignoreAnnotated: ['Preview']
 
 complexity:
   LongMethod:
