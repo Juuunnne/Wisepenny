@@ -53,7 +53,7 @@ fun Application.module() {
     val balanceService = BalanceService(database)
     val transferService = TransferService(database)
 
-    healthRoutes()
+    healthRoutes(database)
     routing {
         authRoutes(authService)
         accountRoutes(accountService)
