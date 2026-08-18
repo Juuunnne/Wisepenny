@@ -11,6 +11,39 @@ Catégories utilisées : **Ajouts** (nouvelles fonctionnalités), **Modification
 
 ---
 
+## [0.8.0] - 2026-08-16 — Supervision, dépendances & traitement des anomalies
+
+### Ajouts
+- Sonde de disponibilité (*readiness*) `GET /health/ready` : vérifie l'accès à
+  PostgreSQL (`SELECT 1`) et renvoie **503** si la base est injoignable.
+- Documentation du système de supervision et d'alerte (`docs/supervision.md`) :
+  périmètre, sondes, indicateurs de suivi, seuils d'alerte et modalité de signalement.
+- Journalisation structurée des requêtes HTTP (méthode, chemin, statut, durée) via
+  le greffon CallLogging, avec rotation des journaux à 30 jours (`logback.xml`).
+- Surveillance automatisée des dépendances par Dependabot (`.github/dependabot.yml`) :
+  écosystèmes Gradle et actions GitHub, cadence hebdomadaire, regroupement des
+  montées mineures et correctives.
+- Formulaire structuré de consignation d'anomalie
+  (`.github/ISSUE_TEMPLATE/anomalie.yml`) à champs obligatoires garantissant la
+  reproductibilité.
+- Processus documenté de collecte et de traitement des anomalies
+  (`docs/anomalies/processus.md`) avec grille de sévérité.
+
+### Corrections
+- **ANO-001** — Prévention de régression du clignotement de l'assistant d'onboarding
+  au démarrage : extraction de la décision de routage en fonction pure `startupScreen`
+  et ajout d'un test unitaire de non-régression exécuté par la CI. Voir
+  `docs/anomalies/ANO-001-onboarding-flash.md`.
+
+## [0.7.0] - 2026-07-27 — Profil, confidentialité & maîtrise des données
+
+### Ajouts
+- Écran de profil : motivation, date d'inscription et actions sur les données.
+- Notice de confidentialité (RGPD) : minimisation des données et stockage local.
+- Réinitialisation complète des données avec confirmation (droit à l'effacement).
+- Fenêtre « À propos » (version de l'application, cadre du projet).
+- Possibilité de revoir le parcours d'introduction sans réinitialiser les données.
+
 ## [0.6.0] - 2026-07-24 — Design system & qualité de code
 
 ### Ajouts
@@ -85,6 +118,8 @@ Catégories utilisées : **Ajouts** (nouvelles fonctionnalités), **Modification
 ### Suppressions
 - Retrait des fichiers modèles multiplateformes (`Platform` / `Greeting`) générés.
 
+[0.8.0]: https://github.com/Juuunnne/Wisepenny/releases/tag/v0.8.0
+[0.7.0]: https://github.com/Juuunnne/Wisepenny/releases/tag/v0.7.0
 [0.6.0]: https://github.com/Juuunnne/Wisepenny/releases/tag/v0.6.0
 [0.5.0]: https://github.com/Juuunnne/Wisepenny/releases/tag/v0.5.0
 [0.4.0]: https://github.com/Juuunnne/Wisepenny/releases/tag/v0.4.0
