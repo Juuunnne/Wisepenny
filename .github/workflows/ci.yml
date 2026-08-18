@@ -35,7 +35,7 @@ jobs:
 
       # Configures Gradle with build caching for faster subsequent runs.
       - name: Set up Gradle
-        uses: gradle/actions/setup-gradle@v4
+        uses: gradle/actions/setup-gradle@v6
 
       - name: Run unit tests
         run: ./gradlew :composeApp:testDebugUnitTest --stacktrace
