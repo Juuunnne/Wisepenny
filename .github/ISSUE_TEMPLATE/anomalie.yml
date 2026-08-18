@@ -1,0 +1,83 @@
+name: "Fiche de consignation d'anomalie"
+description: "Signaler une anomalie (bogue) avec les informations permettant de la reproduire."
+title: "[ANO] <résumé court de l'anomalie>"
+labels: ["anomalie"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Merci de remplir cette fiche le plus précisément possible. Les champs marqués
+        d'un astérisque sont indispensables pour **reproduire** et **qualifier** l'anomalie.
+
+  - type: input
+    id: resume
+    attributes:
+      label: "Résumé *"
+      description: "Une phrase décrivant le symptôme observé."
+      placeholder: "L'assistant d'onboarding clignote au démarrage pour un utilisateur déjà inscrit."
+    validations:
+      required: true
+
+  - type: dropdown
+    id: severite
+    attributes:
+      label: "Sévérité *"
+      description: "Impact sur l'utilisateur et le fonctionnement."
+      options:
+        - "Critique — perte de données / application inutilisable"
+        - "Majeure — fonctionnalité principale dégradée"
+        - "Mineure — gêne visuelle ou cas limite"
+    validations:
+      required: true
+
+  - type: textarea
+    id: environnement
+    attributes:
+      label: "Environnement *"
+      description: "Plateforme, version de l'app, appareil / OS."
+      placeholder: |
+        - Plateforme : Android / iOS / Desktop
+        - Version app : 0.3.0
+        - Appareil / OS : Pixel 6, Android 14
+    validations:
+      required: true
+
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: "Étapes de reproduction *"
+      description: "La séquence exacte, numérotée, permettant de reproduire l'anomalie."
+      placeholder: |
+        1. Compléter l'onboarding puis fermer l'application.
+        2. Relancer l'application à froid.
+        3. Observer le premier rendu.
+    validations:
+      required: true
+
+  - type: textarea
+    id: attendu
+    attributes:
+      label: "Résultat attendu *"
+      placeholder: "Le tableau de bord s'affiche directement, sans passer par l'assistant."
+    validations:
+      required: true
+
+  - type: textarea
+    id: obtenu
+    attributes:
+      label: "Résultat obtenu *"
+      placeholder: "L'assistant d'onboarding apparaît brièvement (une image) avant le tableau de bord."
+    validations:
+      required: true
+
+  - type: textarea
+    id: analyse
+    attributes:
+      label: "Analyse / cause suspectée"
+      description: "Facultatif au signalement, complété lors de la qualification."
+
+  - type: textarea
+    id: preconisation
+    attributes:
+      label: "Préconisation de correction"
+      description: "Facultatif au signalement, complété lors de la qualification."

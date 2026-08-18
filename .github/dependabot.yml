@@ -1,0 +1,35 @@
+# Surveillance automatisée des dépendances.
+# Dependabot ouvre chaque semaine des pull requests de montée de version, que la CI
+# (.github/workflows/ci.yml) valide en rejouant les tests avant toute fusion.
+version: 2
+updates:
+  # Dépendances de l'application et du serveur (catalogue gradle/libs.versions.toml).
+  - package-ecosystem: "gradle"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+    open-pull-requests-limit: 5
+    labels:
+      - "dépendances"
+    commit-message:
+      prefix: "deps"
+    # Regroupe les correctifs mineurs/patch en une seule PR pour limiter le bruit ;
+    # les montées majeures restent isolées pour être évaluées une par une.
+    groups:
+      mineures-et-patch:
+        update-types:
+          - "minor"
+          - "patch"
+
+  # Actions utilisées par la chaîne d'intégration continue.
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+    labels:
+      - "dépendances"
+      - "ci"
+    commit-message:
+      prefix: "ci"
