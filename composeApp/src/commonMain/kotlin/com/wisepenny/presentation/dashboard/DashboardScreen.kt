@@ -364,7 +364,7 @@ private fun PromoCard(onAccept: () -> Unit) {
             color = WisepennyColors.TextOnLight,
         )
         Text(
-            text = "Mets 3 € de côté aujourd'hui au lieu de prendre ton café habituel en terrasse.",
+            text = "Mets 3 € de côté chaque jour pendant 7 jours au lieu de prendre ton café habituel en terrasse.",
             style = MaterialTheme.typography.bodyMedium,
             color = WisepennyColors.TextOnLight,
         )

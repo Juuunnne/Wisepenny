@@ -81,16 +81,29 @@ class DashboardViewModel(
      * Accepts the proposed daily challenge. Creating it makes [showDailyChallenge]
      * false on the next emission, so the proposal card disappears and the challenge
      * shows up under "Défis actifs".
+     *
+     * [accepting] guards against a double tap: the card only hides once the new
+     * challenge re-emits, so without the flag two quick taps would create two
+     * identical challenges. It is reset after the create so a failed attempt can
+     * be retried.
      */
+    private var accepting = false
+
     fun onAcceptDailyChallenge() {
+        if (accepting) return
+        accepting = true
         viewModelScope.launch {
-            challengeRepository.create(
-                title = DAILY_CHALLENGE_TITLE,
-                subtitle = DAILY_CHALLENGE_SUBTITLE,
-                dailyAmountCents = DAILY_CHALLENGE_CENTS,
-                totalDays = DAILY_CHALLENGE_DAYS,
-                startDate = today(),
-            )
+            try {
+                challengeRepository.create(
+                    title = DAILY_CHALLENGE_TITLE,
+                    subtitle = DAILY_CHALLENGE_SUBTITLE,
+                    dailyAmountCents = DAILY_CHALLENGE_CENTS,
+                    totalDays = DAILY_CHALLENGE_DAYS,
+                    startDate = today(),
+                )
+            } finally {
+                accepting = false
+            }
         }
     }
 

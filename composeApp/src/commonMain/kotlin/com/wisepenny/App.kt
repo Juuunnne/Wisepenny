@@ -23,9 +23,25 @@ import org.koin.compose.koinInject
  * from "read completed, no profile yet" — the latter must show the wizard, the
  * former must show nothing (avoids a wizard flash for onboarded users).
  */
-private sealed interface ProfileLoad {
+internal sealed interface ProfileLoad {
     data object Loading : ProfileLoad
     data class Loaded(val profile: Profile?) : ProfileLoad
+}
+
+/** The three mutually exclusive screens the app can route to at startup. */
+internal enum class StartupScreen { LOADING, ONBOARDING, APP }
+
+/**
+ * Pure startup-routing decision, extracted so the anti-flash rule (ANO-001) is
+ * covered by a unit test. While the profile read is still in flight we route to
+ * [StartupScreen.LOADING] — never the wizard — so an already-onboarded user never
+ * sees the onboarding flash. Only once the read has [ProfileLoad.Loaded] do we
+ * route on `onboardingCompleted`.
+ */
+internal fun startupScreen(load: ProfileLoad): StartupScreen = when (load) {
+    ProfileLoad.Loading -> StartupScreen.LOADING
+    is ProfileLoad.Loaded ->
+        if (load.profile?.onboardingCompleted == true) StartupScreen.APP else StartupScreen.ONBOARDING
 }
 
 @Composable
@@ -36,22 +52,20 @@ fun App() {
             .map<Profile?, ProfileLoad> { ProfileLoad.Loaded(it) }
             .collectAsStateWithLifecycle(initialValue = ProfileLoad.Loading)
 
-        when (val current = load) {
-            ProfileLoad.Loading -> Box(
+        when (startupScreen(load)) {
+            StartupScreen.LOADING -> Box(
                 modifier = Modifier
                     .fillMaxSize()
                     .background(WisepennyColors.BackgroundPrimary),
             )
-            is ProfileLoad.Loaded ->
-                if (current.profile?.onboardingCompleted == true) {
-                    // Already onboarded: no seeding here (owned by the wizard), just
-                    // apply any auto-saves that have come due since the last open.
-                    val seeder = koinInject<DataSeeder>()
-                    LaunchedEffect(Unit) { seeder.onAppStart() }
-                    AppNavHost()
-                } else {
-                    OnboardingRoot()
-                }
+            StartupScreen.APP -> {
+                // Already onboarded: no seeding here (owned by the wizard), just
+                // apply any auto-saves that have come due since the last open.
+                val seeder = koinInject<DataSeeder>()
+                LaunchedEffect(Unit) { seeder.onAppStart() }
+                AppNavHost()
+            }
+            StartupScreen.ONBOARDING -> OnboardingRoot()
         }
     }
 }
