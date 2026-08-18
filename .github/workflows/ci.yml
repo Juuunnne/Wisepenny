@@ -31,7 +31,7 @@ jobs:
 
       # Ensures the Android SDK / licenses are available so AGP can resolve compileSdk 36.
       - name: Set up Android SDK
-        uses: android-actions/setup-android@v3
+        uses: android-actions/setup-android@v4
 
       # Configures Gradle with build caching for faster subsequent runs.
       - name: Set up Gradle
