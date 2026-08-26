@@ -19,3 +19,6 @@ captures
 node_modules/
 CONTEXT.md
 /.claude
+
+# Local-only planning docs
+docs/superpowers/
