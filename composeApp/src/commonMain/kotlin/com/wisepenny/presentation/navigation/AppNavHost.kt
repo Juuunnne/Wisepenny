@@ -105,6 +105,8 @@ fun AppNavHost() {
                 val state by viewModel.uiState.collectAsStateWithLifecycle()
                 ProfileScreen(
                     state = state,
+                    onCurrencyChange = viewModel::onCurrencyChange,
+                    onNotificationsToggle = viewModel::onNotificationsToggle,
                     onResetData = viewModel::onResetData,
                 )
             }

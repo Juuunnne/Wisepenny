@@ -9,12 +9,17 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Switch
+import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -25,8 +30,11 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.wisepenny.presentation.components.WisepennyCard
 import com.wisepenny.presentation.components.WisepennyScaffold
 import com.wisepenny.presentation.components.WisepennyScreenHeader
@@ -36,11 +44,16 @@ import com.wisepenny.presentation.theme.WisepennyColors
 import com.wisepenny.presentation.theme.WisepennyShapes
 import com.wisepenny.presentation.theme.WisepennyTheme
 
-private enum class ProfileOverlay { NONE, REPLAY, RGPD, ABOUT, RESET_CONFIRM }
+private enum class ProfileOverlay { NONE, CURRENCY, REPLAY, RGPD, ABOUT, RESET_CONFIRM }
+
+/** Currencies offered in the picker — mirrors the onboarding wizard's set. */
+private val PROFILE_CURRENCIES = listOf("EUR", "USD", "GBP")
 
 @Composable
 fun ProfileScreen(
     state: ProfileUiState,
+    onCurrencyChange: (String) -> Unit,
+    onNotificationsToggle: (Boolean) -> Unit,
     onResetData: () -> Unit,
 ) {
     var overlay by remember { mutableStateOf(ProfileOverlay.NONE) }
@@ -48,22 +61,83 @@ fun ProfileScreen(
     WisepennyScaffold {
         WisepennyScreenHeader(title = "Profil")
 
-        ProfileCard(state)
+        IdentityCard(state)
 
-        Column(verticalArrangement = Arrangement.spacedBy(Spacing.sm)) {
-            SettingsRow("📖", "Revoir l'introduction") { overlay = ProfileOverlay.REPLAY }
-            SettingsRow("🔒", "Confidentialité (RGPD)") { overlay = ProfileOverlay.RGPD }
-            SettingsRow("ℹ️", "À propos") { overlay = ProfileOverlay.ABOUT }
+        SettingsSection(label = "Préférences") {
+            SettingsRow(
+                emoji = "💶",
+                title = "Devise",
+                subtitle = "${currencyName(state.currency)} · ${currencySymbol(state.currency)}",
+                onClick = { overlay = ProfileOverlay.CURRENCY },
+                trailing = { Chevron() },
+            )
+            RowDivider()
+            SettingsRow(
+                emoji = "🔔",
+                title = "Rappels quotidiens",
+                subtitle = "Chaque jour, à 19 h",
+                trailing = {
+                    Switch(
+                        checked = state.notificationsEnabled,
+                        onCheckedChange = onNotificationsToggle,
+                        colors = SwitchDefaults.colors(
+                            checkedThumbColor = WisepennyColors.TextOnLight,
+                            checkedTrackColor = WisepennyColors.AccentMint,
+                            uncheckedThumbColor = WisepennyColors.TextTertiary,
+                            uncheckedTrackColor = WisepennyColors.SurfaceElevated,
+                            uncheckedBorderColor = WisepennyColors.BorderSubtle,
+                        ),
+                    )
+                },
+            )
+        }
+
+        SettingsSection(label = "Aide & informations") {
+            SettingsRow(
+                emoji = "📖",
+                title = "Revoir l'introduction",
+                subtitle = "Redécouvrir les fonctionnalités",
+                onClick = { overlay = ProfileOverlay.REPLAY },
+                trailing = { Chevron() },
+            )
+            RowDivider()
+            SettingsRow(
+                emoji = "🔒",
+                title = "Confidentialité",
+                subtitle = "Conforme RGPD · tes données restent locales",
+                onClick = { overlay = ProfileOverlay.RGPD },
+                trailing = { Chevron() },
+            )
+            RowDivider()
+            SettingsRow(
+                emoji = "ℹ️",
+                title = "À propos",
+                subtitle = "Wisepenny · 0.8 · démo",
+                onClick = { overlay = ProfileOverlay.ABOUT },
+                trailing = { Chevron() },
+            )
+            RowDivider()
             SettingsRow(
                 emoji = "🗑️",
                 title = "Réinitialiser mes données",
+                subtitle = "Effacer et recommencer l'introduction",
                 tint = WisepennyColors.Danger,
-            ) { overlay = ProfileOverlay.RESET_CONFIRM }
+                onClick = { overlay = ProfileOverlay.RESET_CONFIRM },
+                trailing = { Chevron() },
+            )
         }
     }
 
     when (overlay) {
         ProfileOverlay.NONE -> Unit
+        ProfileOverlay.CURRENCY -> CurrencyPickerDialog(
+            selected = state.currency,
+            onSelect = {
+                onCurrencyChange(it)
+                overlay = ProfileOverlay.NONE
+            },
+            onDismiss = { overlay = ProfileOverlay.NONE },
+        )
         ProfileOverlay.REPLAY -> ReplayOverlay(onClose = { overlay = ProfileOverlay.NONE })
         ProfileOverlay.RGPD -> InfoDialog(
             title = "Confidentialité (RGPD)",
@@ -91,28 +165,94 @@ fun ProfileScreen(
 }
 
 @Composable
-private fun ProfileCard(state: ProfileUiState) {
+private fun IdentityCard(state: ProfileUiState) {
     WisepennyCard(
         modifier = Modifier.fillMaxWidth(),
-        verticalArrangement = Arrangement.spacedBy(Spacing.xs),
+        verticalArrangement = Arrangement.spacedBy(Spacing.md),
+    ) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(Spacing.md),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Avatar(state.firstName)
+            Column(verticalArrangement = Arrangement.spacedBy(Spacing.xxs)) {
+                Text(
+                    text = state.firstName.ifBlank { "—" },
+                    style = MaterialTheme.typography.titleMedium,
+                    color = WisepennyColors.TextPrimary,
+                )
+                if (state.memberSinceLabel.isNotBlank()) {
+                    Text(
+                        text = "Membre depuis le ${state.memberSinceLabel}",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = WisepennyColors.TextTertiary,
+                    )
+                }
+            }
+        }
+        Row(horizontalArrangement = Arrangement.spacedBy(Spacing.xs)) {
+            if (state.motivation.isNotBlank()) {
+                Chip(
+                    text = state.motivation,
+                    textColor = WisepennyColors.AccentMint,
+                )
+            }
+            Chip(
+                text = "${currencySymbol(state.currency)} · ${state.currency}",
+                textColor = WisepennyColors.TextSecondary,
+            )
+        }
+    }
+}
+
+@Composable
+private fun Avatar(firstName: String) {
+    val initial = firstName.trim().firstOrNull()?.uppercase() ?: "?"
+    Box(
+        modifier = Modifier
+            .size(64.dp)
+            .clip(CircleShape)
+            .background(WisepennyColors.AccentMint),
+        contentAlignment = Alignment.Center,
     ) {
         Text(
-            text = "Ma motivation",
+            text = initial,
+            style = MaterialTheme.typography.headlineMedium,
+            color = WisepennyColors.TextOnLight,
+        )
+    }
+}
+
+@Composable
+private fun Chip(text: String, textColor: Color) {
+    Text(
+        text = text,
+        style = MaterialTheme.typography.labelSmall,
+        color = textColor,
+        modifier = Modifier
+            .clip(WisepennyShapes.extraLarge)
+            .background(WisepennyColors.BackgroundPrimary)
+            .padding(horizontal = Spacing.sm, vertical = Spacing.xs),
+    )
+}
+
+@Composable
+private fun SettingsSection(label: String, content: @Composable () -> Unit) {
+    Column(verticalArrangement = Arrangement.spacedBy(Spacing.sm)) {
+        Text(
+            text = label.uppercase(),
             style = MaterialTheme.typography.labelSmall,
             color = WisepennyColors.TextTertiary,
+            letterSpacing = 1.sp,
+            modifier = Modifier.padding(start = Spacing.xs),
         )
-        Text(
-            text = state.motivation.ifBlank { "—" },
-            style = MaterialTheme.typography.titleMedium,
-            color = WisepennyColors.TextPrimary,
-        )
-        if (state.memberSinceLabel.isNotBlank()) {
-            Text(
-                text = "Membre depuis le ${state.memberSinceLabel}",
-                style = MaterialTheme.typography.bodyMedium,
-                color = WisepennyColors.TextTertiary,
-                modifier = Modifier.padding(top = Spacing.xs),
-            )
+        WisepennyCard(
+            modifier = Modifier.fillMaxWidth(),
+            contentPadding = androidx.compose.foundation.layout.PaddingValues(0.dp),
+            verticalArrangement = Arrangement.spacedBy(0.dp),
+        ) {
+            content()
         }
     }
 }
@@ -121,27 +261,128 @@ private fun ProfileCard(state: ProfileUiState) {
 private fun SettingsRow(
     emoji: String,
     title: String,
-    tint: androidx.compose.ui.graphics.Color = WisepennyColors.TextPrimary,
-    onClick: () -> Unit,
+    subtitle: String? = null,
+    tint: Color = WisepennyColors.TextPrimary,
+    onClick: (() -> Unit)? = null,
+    trailing: (@Composable () -> Unit)? = null,
 ) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .clip(WisepennyShapes.small)
-            .background(WisepennyColors.SurfaceElevated)
-            .clickable(onClick = onClick)
-            .padding(horizontal = Spacing.lg, vertical = Spacing.md),
-        horizontalArrangement = Arrangement.spacedBy(Spacing.sm),
+            .then(if (onClick != null) Modifier.clickable(onClick = onClick) else Modifier)
+            .padding(horizontal = Spacing.md, vertical = Spacing.md),
+        horizontalArrangement = Arrangement.spacedBy(Spacing.md),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        Text(text = emoji, style = MaterialTheme.typography.titleMedium)
-        Text(
-            text = title,
-            style = MaterialTheme.typography.bodyMedium,
-            color = tint,
+        IconTile(emoji = emoji, tint = tint)
+        Column(
             modifier = Modifier.weight(1f),
-        )
+            verticalArrangement = Arrangement.spacedBy(Spacing.xxs),
+        ) {
+            Text(
+                text = title,
+                style = MaterialTheme.typography.bodyMedium,
+                fontWeight = FontWeight.SemiBold,
+                color = tint,
+            )
+            if (subtitle != null) {
+                Text(
+                    text = subtitle,
+                    style = MaterialTheme.typography.labelSmall,
+                    color = WisepennyColors.TextTertiary,
+                )
+            }
+        }
+        trailing?.invoke()
     }
+}
+
+@Composable
+private fun IconTile(emoji: String, tint: Color) {
+    Box(
+        modifier = Modifier
+            .size(40.dp)
+            .clip(WisepennyShapes.extraSmall)
+            .background(tint.copy(alpha = 0.15f)),
+        contentAlignment = Alignment.Center,
+    ) {
+        Text(text = emoji, style = MaterialTheme.typography.bodyMedium)
+    }
+}
+
+@Composable
+private fun Chevron() {
+    Text(
+        text = "›",
+        fontSize = 24.sp,
+        color = WisepennyColors.TextTertiary,
+    )
+}
+
+@Composable
+private fun RowDivider() {
+    HorizontalDivider(
+        modifier = Modifier.padding(start = Spacing.md + 40.dp + Spacing.md),
+        color = WisepennyColors.BorderSubtle,
+    )
+}
+
+@Composable
+private fun CurrencyPickerDialog(
+    selected: String,
+    onSelect: (String) -> Unit,
+    onDismiss: () -> Unit,
+) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        containerColor = WisepennyColors.SurfaceElevated,
+        title = {
+            Text(
+                text = "Choisir la devise",
+                style = MaterialTheme.typography.titleMedium,
+                color = WisepennyColors.TextPrimary,
+            )
+        },
+        text = {
+            Column(verticalArrangement = Arrangement.spacedBy(Spacing.xs)) {
+                PROFILE_CURRENCIES.forEach { code ->
+                    val isSelected = code == selected
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clip(WisepennyShapes.small)
+                            .background(
+                                if (isSelected) WisepennyColors.AccentMint.copy(alpha = 0.15f)
+                                else Color.Transparent
+                            )
+                            .clickable { onSelect(code) }
+                            .padding(horizontal = Spacing.md, vertical = Spacing.sm),
+                        horizontalArrangement = Arrangement.spacedBy(Spacing.sm),
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        Text(
+                            text = "${currencySymbol(code)}  ${currencyName(code)}",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = WisepennyColors.TextPrimary,
+                            modifier = Modifier.weight(1f),
+                        )
+                        if (isSelected) {
+                            Text(
+                                text = "✓",
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = WisepennyColors.AccentMint,
+                            )
+                        }
+                    }
+                }
+            }
+        },
+        confirmButton = {
+            TextButton(onClick = onDismiss) {
+                Text(text = "Fermer", color = WisepennyColors.AccentMint)
+            }
+        },
+    )
 }
 
 @Composable
@@ -234,15 +475,32 @@ private fun ResetConfirmDialog(onConfirm: () -> Unit, onDismiss: () -> Unit) {
     )
 }
 
+private fun currencySymbol(code: String): String = when (code) {
+    "USD" -> "$"
+    "GBP" -> "£"
+    else -> "€"
+}
+
+private fun currencyName(code: String): String = when (code) {
+    "USD" -> "Dollar"
+    "GBP" -> "Livre"
+    else -> "Euro"
+}
+
 @Preview
 @Composable
 private fun ProfileScreenPreview() {
     WisepennyTheme {
         ProfileScreen(
             state = ProfileUiState(
-                motivation = "Réaliser le voyage de mes rêves",
-                memberSinceLabel = "8 juillet 2026",
+                firstName = "Léa",
+                motivation = "Réaliser un projet",
+                memberSinceLabel = "23 juillet 2026",
+                currency = "EUR",
+                notificationsEnabled = true,
             ),
+            onCurrencyChange = {},
+            onNotificationsToggle = {},
             onResetData = {},
         )
     }
