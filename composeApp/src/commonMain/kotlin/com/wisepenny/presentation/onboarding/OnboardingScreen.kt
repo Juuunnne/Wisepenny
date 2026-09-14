@@ -30,12 +30,20 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.wisepenny.presentation.components.SavingsProgressBar
+import com.wisepenny.presentation.components.WisepennyCard
+import com.wisepenny.presentation.components.WisepennyCardVariant
 import com.wisepenny.presentation.goal.goalEmoji
 import com.wisepenny.presentation.theme.Spacing
 import com.wisepenny.presentation.theme.WisepennyColors
@@ -54,9 +62,11 @@ fun OnboardingRoot() {
         onCurrencySelect = viewModel::onCurrencySelect,
         onMotivationSelect = viewModel::onMotivationSelect,
         onFirstNameChange = viewModel::onFirstNameChange,
-        onNameChange = viewModel::onNameChange,
-        onAmountChange = viewModel::onAmountChange,
-        onHorizonSelect = viewModel::onHorizonSelect,
+        onCategorySelect = viewModel::onCategorySelect,
+        onAmountIncrement = viewModel::onAmountIncrement,
+        onAmountDecrement = viewModel::onAmountDecrement,
+        onAmountPreset = viewModel::onAmountPreset,
+        onBankSelect = viewModel::onBankSelect,
         onBack = viewModel::back,
         onNext = viewModel::next,
         onSkip = viewModel::skip,
@@ -69,21 +79,64 @@ fun OnboardingScreen(
     onCurrencySelect: (String) -> Unit,
     onMotivationSelect: (OnboardingMotivation) -> Unit,
     onFirstNameChange: (String) -> Unit,
-    onNameChange: (String) -> Unit,
-    onAmountChange: (String) -> Unit,
-    onHorizonSelect: (Int) -> Unit,
+    onCategorySelect: (OnboardingCategory) -> Unit,
+    onAmountIncrement: () -> Unit,
+    onAmountDecrement: () -> Unit,
+    onAmountPreset: (Long) -> Unit,
+    onBankSelect: (String) -> Unit,
     onBack: () -> Unit,
     onNext: () -> Unit,
     onSkip: () -> Unit,
+) {
+    when (state.step) {
+        OnboardingStep.WELCOME -> WelcomeScreen(onNext)
+        OnboardingStep.DONE -> DoneScreen(state, onNext)
+        else -> NumberedStepScaffold(state, onBack, onNext, onSkip) {
+            when (state.step) {
+                OnboardingStep.CURRENCY -> CurrencyStep(state, onCurrencySelect)
+                OnboardingStep.MOTIVATION -> MotivationStep(state, onMotivationSelect)
+                OnboardingStep.NAME -> NameStep(state, onFirstNameChange)
+                OnboardingStep.GOAL_CATEGORY -> GoalCategoryStep(state, onCategorySelect)
+                OnboardingStep.AMOUNT -> AmountStep(state, onAmountIncrement, onAmountDecrement, onAmountPreset)
+                OnboardingStep.NOTIFICATIONS -> NotificationsStep()
+                OnboardingStep.BANK -> BankStep(state, onBankSelect)
+                else -> Unit
+            }
+        }
+    }
+}
+
+// ---------------------------------------------------------------------------
+// Frames
+// ---------------------------------------------------------------------------
+
+/** The shared frame for the seven numbered steps: back + progress, body, pinned action. */
+@Composable
+private fun NumberedStepScaffold(
+    state: OnboardingUiState,
+    onBack: () -> Unit,
+    onNext: () -> Unit,
+    onSkip: () -> Unit,
+    body: @Composable () -> Unit,
 ) {
     Column(
         modifier = Modifier
             .fillMaxSize()
             .background(WisepennyColors.BackgroundPrimary)
             .padding(horizontal = Spacing.xl)
-            .padding(top = Spacing.huge, bottom = Spacing.xl),
+            .padding(top = Spacing.xxl, bottom = Spacing.xl),
     ) {
-        StepIndicator(step = state.step)
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(Spacing.md),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            BackButton(onBack)
+            OnboardingProgressBar(
+                fraction = state.stepNumber / ONBOARDING_TOTAL_STEPS.toFloat(),
+                modifier = Modifier.weight(1f),
+            )
+        }
 
         Column(
             modifier = Modifier
@@ -93,61 +146,28 @@ fun OnboardingScreen(
                 .padding(top = Spacing.xl),
             verticalArrangement = Arrangement.spacedBy(Spacing.lg),
         ) {
-            when (state.step) {
-                OnboardingStep.WELCOME -> WelcomeStep(state, onFirstNameChange)
-                OnboardingStep.CURRENCY -> CurrencyStep(state, onCurrencySelect)
-                OnboardingStep.MOTIVATION -> MotivationStep(state, onMotivationSelect)
-                OnboardingStep.GOAL -> GoalStep(state, onNameChange, onAmountChange)
-                OnboardingStep.PREVIEW -> PreviewStep(state, onHorizonSelect)
-                OnboardingStep.NOTIFICATIONS -> NotificationsStep()
-                OnboardingStep.BANK -> BankStep()
-            }
+            StepHeader(state)
+            body()
         }
 
         Column(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(top = Spacing.md),
+            horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(Spacing.xs),
         ) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(Spacing.sm),
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                if (!state.isFirstStep) {
-                    TextButton(onClick = onBack) {
-                        Text(
-                            text = "Retour",
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = WisepennyColors.TextTertiary,
-                        )
-                    }
-                }
-                Button(
-                    onClick = onNext,
-                    enabled = state.canProceed,
-                    shape = WisepennyShapes.small,
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = WisepennyColors.AccentMint,
-                        contentColor = WisepennyColors.TextOnLight,
-                        disabledContainerColor = WisepennyColors.BorderSubtle,
-                        disabledContentColor = WisepennyColors.TextDisabled,
-                    ),
-                    modifier = Modifier.weight(1f),
-                ) {
-                    Text(text = primaryLabel(state), style = MaterialTheme.typography.titleMedium)
-                }
-            }
+            PrimaryButton(
+                text = primaryLabel(state),
+                enabled = state.canProceed,
+                onClick = onNext,
+            )
             if (state.hasSkip) {
-                TextButton(
-                    onClick = onSkip,
-                    modifier = Modifier.align(Alignment.CenterHorizontally),
-                ) {
+                TextButton(onClick = onSkip) {
                     Text(
                         text = skipLabel(state),
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = WisepennyColors.TextTertiary,
+                        style = MaterialTheme.typography.titleMedium,
+                        color = WisepennyColors.AccentMint,
                     )
                 }
             }
@@ -155,121 +175,180 @@ fun OnboardingScreen(
     }
 }
 
-private fun primaryLabel(state: OnboardingUiState): String = when (state.step) {
-    OnboardingStep.WELCOME -> "Commencer"
-    OnboardingStep.CURRENCY -> "Confirmer"
-    OnboardingStep.NOTIFICATIONS -> "Activer les rappels"
-    OnboardingStep.BANK -> if (state.isSubmitting) "Création…" else "Connecter (démo)"
-    else -> "Continuer"
-}
-
-private fun skipLabel(state: OnboardingUiState): String = when (state.step) {
-    OnboardingStep.NOTIFICATIONS -> "Plus tard"
-    else -> "Ignorer pour l'instant"
-}
-
-/**
- * The wizard's first step: the brand intro plus an optional first-name field. The
- * name feeds the dashboard greeting; left blank, the greeting falls back to a neutral
- * label. Kept separate from [WelcomeContent] so the Profil "Revoir l'introduction"
- * overlay reuses the intro without showing an input.
- */
 @Composable
-private fun WelcomeStep(state: OnboardingUiState, onFirstNameChange: (String) -> Unit) {
-    WelcomeContent()
-    WisepennyTextField(
-        value = state.firstName,
-        onValueChange = onFirstNameChange,
-        placeholder = "Ton prénom (facultatif)",
-    )
+private fun WelcomeScreen(onNext: () -> Unit) {
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(WisepennyColors.BackgroundPrimary)
+            .padding(horizontal = Spacing.xl)
+            .padding(top = Spacing.xxl, bottom = Spacing.xl),
+    ) {
+        WelcomeContent()
+        Spacer(Modifier.weight(1f))
+        PrimaryButton(text = "Commencer", enabled = true, onClick = onNext)
+        Spacer(Modifier.height(Spacing.md))
+        Text(
+            text = "Aucun compte requis — on personnalise l'app en 7 étapes.",
+            style = MaterialTheme.typography.bodyMedium,
+            color = WisepennyColors.TextTertiary,
+            textAlign = TextAlign.Center,
+            modifier = Modifier.fillMaxWidth().padding(horizontal = Spacing.md),
+        )
+    }
 }
 
 /**
- * The brand intro shown as the wizard's first step and reused read-only by the
- * Profil "Revoir l'introduction" overlay.
+ * The brand intro shown at the top of the landing step and reused read-only by the
+ * Profil "Revoir l'introduction" overlay — a sample goal card, the headline and pitch.
  */
 @Composable
 fun WelcomeContent() {
-    Column(verticalArrangement = Arrangement.spacedBy(Spacing.md)) {
+    Column(verticalArrangement = Arrangement.spacedBy(Spacing.xl)) {
         Text(
-            text = "Bienvenue sur Wisepenny",
-            style = MaterialTheme.typography.headlineMedium,
-            color = WisepennyColors.TextPrimary,
-        )
-        Text(
-            text = "Apprends la finance et regarde ton objectif grandir, un petit pas à la fois.",
+            text = "WISEPENNY",
             style = MaterialTheme.typography.titleMedium,
             color = WisepennyColors.AccentMint,
+            fontWeight = FontWeight.ExtraBold,
+        )
+        GoalPreviewCard(
+            title = "Voyage au Japon",
+            savedCents = 125_000,
+            targetCents = 300_000,
+            currency = "EUR",
         )
         Column(verticalArrangement = Arrangement.spacedBy(Spacing.sm)) {
-            WelcomeBullet("🎯", "Fixe un objectif d'épargne concret")
-            WelcomeBullet("📚", "Apprends avec des modules courts et clairs")
-            WelcomeBullet("📈", "Suis ta progression jour après jour")
-        }
-    }
-}
-
-@Composable
-private fun WelcomeBullet(emoji: String, text: String) {
-    Row(
-        horizontalArrangement = Arrangement.spacedBy(Spacing.sm),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        Text(text = emoji, style = MaterialTheme.typography.titleMedium)
-        Text(
-            text = text,
-            style = MaterialTheme.typography.bodyMedium,
-            color = WisepennyColors.TextSecondary,
-        )
-    }
-}
-
-@Composable
-private fun CurrencyStep(state: OnboardingUiState, onCurrencySelect: (String) -> Unit) {
-    StepHeading("Ta devise", "On l'a détectée pour toi — confirme ou change.")
-    Box(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clip(WisepennyShapes.large)
-            .background(WisepennyColors.SurfaceElevated)
-            .padding(Spacing.xl),
-        contentAlignment = Alignment.Center,
-    ) {
-        Text(
-            text = "${currencySymbol(state.currency)}  ${state.currency}",
-            style = MaterialTheme.typography.displayMedium,
-            color = WisepennyColors.TextPrimary,
-        )
-    }
-    Row(
-        modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.spacedBy(Spacing.sm),
-    ) {
-        ONBOARDING_CURRENCIES.forEach { code ->
-            SelectChip(
-                text = "${currencySymbol(code)} $code",
-                selected = state.currency == code,
-                onClick = { onCurrencySelect(code) },
-                modifier = Modifier.weight(1f),
+            Text(
+                text = "Atteins tes objectifs, un défi à la fois.",
+                style = MaterialTheme.typography.displayMedium,
+                color = WisepennyColors.TextPrimary,
+                fontWeight = FontWeight.ExtraBold,
+            )
+            Text(
+                text = "Des petits défis quotidiens qui font grandir ton épargne, sans y penser.",
+                style = MaterialTheme.typography.titleMedium,
+                color = WisepennyColors.TextTertiary,
+                fontWeight = FontWeight.Normal,
             )
         }
     }
 }
 
 @Composable
-private fun MotivationStep(
-    state: OnboardingUiState,
-    onMotivationSelect: (OnboardingMotivation) -> Unit,
-) {
-    StepHeading("Pourquoi épargnes-tu ?", "Choisis ce qui te ressemble le plus.")
+private fun DoneScreen(state: OnboardingUiState, onNext: () -> Unit) {
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(WisepennyColors.BackgroundPrimary)
+            .padding(horizontal = Spacing.xl)
+            .padding(top = Spacing.xxl, bottom = Spacing.xl),
+    ) {
+        Spacer(Modifier.weight(0.6f))
+        Box(
+            modifier = Modifier
+                .size(112.dp)
+                .clip(CircleShape)
+                .background(WisepennyColors.AccentMint.copy(alpha = 0.12f)),
+            contentAlignment = Alignment.Center,
+        ) {
+            Box(
+                modifier = Modifier.size(80.dp).clip(CircleShape).background(WisepennyColors.AccentMint),
+                contentAlignment = Alignment.Center,
+            ) {
+                Text("✓", fontSize = 36.sp, color = WisepennyColors.TextOnLight, fontWeight = FontWeight.Bold)
+            }
+        }
+        Spacer(Modifier.height(Spacing.lg))
+        Text(
+            text = if (state.firstName.isBlank()) "Bienvenue !" else "Bienvenue, ${state.firstName.trim()} !",
+            style = MaterialTheme.typography.displayMedium,
+            color = WisepennyColors.TextPrimary,
+            fontWeight = FontWeight.ExtraBold,
+        )
+        Spacer(Modifier.height(Spacing.sm))
+        Text(
+            text = "Ton premier objectif est prêt. Ton premier défi t'attend déjà.",
+            style = MaterialTheme.typography.titleMedium,
+            color = WisepennyColors.TextTertiary,
+        )
+        Spacer(Modifier.height(Spacing.xl))
+        GoalPreviewCard(
+            title = state.goalName,
+            savedCents = 0,
+            targetCents = state.amountCents,
+            currency = state.currency,
+        )
+        Spacer(Modifier.weight(1f))
+        PrimaryButton(
+            text = if (state.isSubmitting) "Création…" else "C'est parti",
+            enabled = !state.isSubmitting,
+            onClick = onNext,
+        )
+    }
+}
+
+// ---------------------------------------------------------------------------
+// Numbered steps
+// ---------------------------------------------------------------------------
+
+@Composable
+private fun CurrencyStep(state: OnboardingUiState, onSelect: (String) -> Unit) {
     Column(verticalArrangement = Arrangement.spacedBy(Spacing.sm)) {
-        OnboardingMotivation.ALL.chunked(2).forEach { rowItems ->
+        ONBOARDING_CURRENCIES.forEach { c ->
+            val selected = state.currency == c.code
+            OptionRow(
+                selected = selected,
+                onClick = { onSelect(c.code) },
+                leading = { SymbolBadge(currencySymbol(c.code), selected) },
+                title = c.name,
+                subtitle = c.code,
+            )
+        }
+    }
+}
+
+@Composable
+private fun MotivationStep(state: OnboardingUiState, onSelect: (OnboardingMotivation) -> Unit) {
+    Column(verticalArrangement = Arrangement.spacedBy(Spacing.sm)) {
+        OnboardingMotivation.ALL.forEach { m ->
+            val selected = state.motivation == m
+            OptionRow(
+                selected = selected,
+                onClick = { onSelect(m) },
+                leading = { EmojiBadge(goalEmoji(m.iconKey)) },
+                title = m.label,
+                subtitle = m.subtitle,
+            )
+        }
+    }
+}
+
+@Composable
+private fun NameStep(state: OnboardingUiState, onFirstNameChange: (String) -> Unit) {
+    Text(
+        text = "PRÉNOM",
+        style = MaterialTheme.typography.labelSmall,
+        color = WisepennyColors.TextTertiary,
+        letterSpacing = 1.sp,
+        modifier = Modifier.padding(top = Spacing.sm),
+    )
+    WisepennyTextField(
+        value = state.firstName,
+        onValueChange = onFirstNameChange,
+        placeholder = "Ton prénom",
+    )
+}
+
+@Composable
+private fun GoalCategoryStep(state: OnboardingUiState, onSelect: (OnboardingCategory) -> Unit) {
+    Column(verticalArrangement = Arrangement.spacedBy(Spacing.sm)) {
+        OnboardingCategory.ALL.chunked(2).forEach { rowItems ->
             Row(horizontalArrangement = Arrangement.spacedBy(Spacing.sm)) {
-                rowItems.forEach { motivation ->
-                    SelectChip(
-                        text = "${goalEmoji(motivation.iconKey)}  ${motivation.label}",
-                        selected = state.motivation == motivation,
-                        onClick = { onMotivationSelect(motivation) },
+                rowItems.forEach { category ->
+                    CategoryCard(
+                        category = category,
+                        selected = state.category == category,
+                        onClick = { onSelect(category) },
                         modifier = Modifier.weight(1f),
                     )
                 }
@@ -280,158 +359,515 @@ private fun MotivationStep(
 }
 
 @Composable
-private fun GoalStep(
+private fun AmountStep(
     state: OnboardingUiState,
-    onNameChange: (String) -> Unit,
-    onAmountChange: (String) -> Unit,
+    onIncrement: () -> Unit,
+    onDecrement: () -> Unit,
+    onPreset: (Long) -> Unit,
 ) {
-    StepHeading("Ton objectif", "Donne-lui un nom et un montant à atteindre.")
-    if (state.motivation != null) {
-        Text(
-            text = "Pour : ${state.motivation.label}",
-            style = MaterialTheme.typography.labelSmall,
-            color = WisepennyColors.AccentMint,
-        )
-    }
-    WisepennyTextField(
-        value = state.name,
-        onValueChange = onNameChange,
-        placeholder = "Ex. Voyage au Japon",
-    )
-    WisepennyTextField(
-        value = state.amountText,
-        onValueChange = onAmountChange,
-        placeholder = "Montant cible",
-        keyboardType = KeyboardType.Number,
-        suffix = currencySymbol(state.currency),
-    )
-}
-
-@Composable
-private fun PreviewStep(state: OnboardingUiState, onHorizonSelect: (Int) -> Unit) {
-    StepHeading("Ton plan d'épargne", "Choisis une échéance, on calcule le reste.")
+    Spacer(Modifier.height(Spacing.xl))
     Row(
         modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.spacedBy(Spacing.sm),
+        horizontalArrangement = Arrangement.spacedBy(Spacing.md),
+        verticalAlignment = Alignment.CenterVertically,
     ) {
-        ONBOARDING_HORIZONS.forEach { months ->
-            SelectChip(
-                text = "$months mois",
-                selected = state.horizonMonths == months,
-                onClick = { onHorizonSelect(months) },
-                modifier = Modifier.weight(1f),
-            )
+        StepperButton("−", onDecrement)
+        Text(
+            text = formatMoney(state.amountCents, state.currency),
+            style = MaterialTheme.typography.displayMedium,
+            color = WisepennyColors.TextPrimary,
+            fontWeight = FontWeight.ExtraBold,
+            textAlign = TextAlign.Center,
+            maxLines = 1,
+            modifier = Modifier.weight(1f),
+        )
+        StepperButton("+", onIncrement)
+    }
+    Spacer(Modifier.height(Spacing.lg))
+    Column(verticalArrangement = Arrangement.spacedBy(Spacing.sm)) {
+        ONBOARDING_PRESETS.chunked(3).forEach { rowItems ->
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(Spacing.sm, Alignment.CenterHorizontally),
+            ) {
+                rowItems.forEach { units ->
+                    PresetChip(
+                        text = formatMoney(units * 100, state.currency),
+                        selected = state.amountUnits == units,
+                        onClick = { onPreset(units) },
+                    )
+                }
+            }
         }
     }
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clip(WisepennyShapes.large)
-            .background(WisepennyColors.AccentMintSoft)
-            .padding(Spacing.xl),
-        verticalArrangement = Arrangement.spacedBy(Spacing.xs),
-    ) {
-        Text(
-            text = "Épargne",
-            style = MaterialTheme.typography.bodyMedium,
-            color = WisepennyColors.TextOnLightMuted,
-        )
-        Text(
-            text = "${formatMoney(state.monthlyCents, state.currency)} / mois",
-            style = MaterialTheme.typography.displayMedium,
-            color = WisepennyColors.TextOnLight,
-        )
-        Text(
-            text = "🎉 Objectif atteint en ${formatMonthYear(state.projectedDate)}",
-            style = MaterialTheme.typography.titleMedium,
-            color = WisepennyColors.TextOnLight,
-            modifier = Modifier.padding(top = Spacing.xs),
-        )
-    }
+    Spacer(Modifier.height(Spacing.lg))
+    Text(
+        text = buildAnnotatedString {
+            append("Soit environ ")
+            withStyle(SpanStyle(color = WisepennyColors.AccentMint, fontWeight = FontWeight.Bold)) {
+                append("${formatMoney(state.weeklyCents, state.currency)} par semaine")
+            }
+            append(" pendant $ONBOARDING_HORIZON_MONTHS mois.")
+        },
+        style = MaterialTheme.typography.bodyMedium,
+        color = WisepennyColors.TextTertiary,
+        textAlign = TextAlign.Center,
+        modifier = Modifier.fillMaxWidth(),
+    )
 }
 
 @Composable
 private fun NotificationsStep() {
-    PrimingContent(
-        emoji = "🔔",
-        title = "Reste sur la bonne voie",
-        body = "On t'enverra un rappel en douceur quand un défi t'attend ou que tu " +
-            "approches de ton objectif. Pas de spam, promis.",
-    )
+    Spacer(Modifier.height(Spacing.md))
+    MockNotificationCard()
 }
 
 @Composable
-private fun BankStep() {
-    PrimingContent(
-        emoji = "🏦",
-        title = "Connecte ta banque",
-        body = "Pour la démo, Wisepenny utilise une connexion bancaire simulée : " +
-            "aucune vraie banque n'est reliée et aucune donnée réelle n'est partagée. " +
-            "Tu peux ignorer cette étape.",
-    )
+private fun BankStep(state: OnboardingUiState, onBankSelect: (String) -> Unit) {
+    DemoCallout()
+    Spacer(Modifier.height(Spacing.xs))
+    Column(verticalArrangement = Arrangement.spacedBy(Spacing.sm)) {
+        ONBOARDING_BANKS.forEach { (name, subtitle) ->
+            val selected = state.selectedBank == name
+            OptionRow(
+                selected = selected,
+                onClick = { onBankSelect(name) },
+                leading = { LetterBadge(name.first().toString(), selected) },
+                title = name,
+                subtitle = subtitle,
+            )
+        }
+    }
 }
 
+// ---------------------------------------------------------------------------
+// Building blocks
+// ---------------------------------------------------------------------------
+
+private fun primaryLabel(state: OnboardingUiState): String = when (state.step) {
+    OnboardingStep.NOTIFICATIONS -> "Activer les rappels"
+    else -> "Continuer"
+}
+
+private fun skipLabel(state: OnboardingUiState): String = when (state.step) {
+    OnboardingStep.NOTIFICATIONS -> "Plus tard"
+    else -> "Ignorer cette étape"
+}
+
+private fun stepTitle(step: OnboardingStep): String = when (step) {
+    OnboardingStep.CURRENCY -> "Confirme ta devise"
+    OnboardingStep.MOTIVATION -> "Qu'est-ce qui te motive ?"
+    OnboardingStep.NAME -> "Et toi, c'est comment ?"
+    OnboardingStep.GOAL_CATEGORY -> "Ton premier objectif ?"
+    OnboardingStep.AMOUNT -> "Combien veux-tu mettre de côté ?"
+    OnboardingStep.NOTIFICATIONS -> "Un petit rappel chaque jour"
+    OnboardingStep.BANK -> "Relier ta banque"
+    else -> ""
+}
+
+private fun stepSubtitle(state: OnboardingUiState): String = when (state.step) {
+    OnboardingStep.CURRENCY -> "Toutes tes économies seront affichées dans cette devise."
+    OnboardingStep.MOTIVATION -> "On adapte tes défis et tes rappels selon ce qui compte pour toi."
+    OnboardingStep.NAME -> "Juste ton prénom, pour personnaliser tes défis."
+    OnboardingStep.GOAL_CATEGORY -> "Choisis une catégorie — tu pourras tout changer plus tard."
+    OnboardingStep.AMOUNT -> "Pour « ${state.goalName} ». Une estimation suffit."
+    OnboardingStep.NOTIFICATIONS -> "Un seul par jour, au bon moment, pour ne jamais casser ta série."
+    OnboardingStep.BANK -> "Pour créditer tes défis automatiquement — ou fais-le à la main plus tard."
+    else -> ""
+}
+
+/** The uniform header for the numbered steps: étape label + big title + subtitle. */
 @Composable
-private fun PrimingContent(emoji: String, title: String, body: String) {
-    Column(
-        modifier = Modifier.fillMaxWidth(),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(Spacing.md),
-    ) {
-        Text(text = emoji, style = MaterialTheme.typography.displayMedium)
+private fun StepHeader(state: OnboardingUiState) {
+    Column(verticalArrangement = Arrangement.spacedBy(Spacing.xs)) {
         Text(
-            text = title,
-            style = MaterialTheme.typography.headlineMedium,
-            color = WisepennyColors.TextPrimary,
-            textAlign = TextAlign.Center,
+            text = "ÉTAPE ${state.stepNumber} SUR $ONBOARDING_TOTAL_STEPS",
+            style = MaterialTheme.typography.labelSmall,
+            color = WisepennyColors.AccentMint,
+            fontWeight = FontWeight.Bold,
+            letterSpacing = 1.5.sp,
         )
         Text(
-            text = body,
-            style = MaterialTheme.typography.bodyMedium,
+            text = stepTitle(state.step),
+            style = MaterialTheme.typography.displayMedium,
+            color = WisepennyColors.TextPrimary,
+            fontWeight = FontWeight.ExtraBold,
+        )
+        Text(
+            text = stepSubtitle(state),
+            style = MaterialTheme.typography.titleMedium,
             color = WisepennyColors.TextTertiary,
-            textAlign = TextAlign.Center,
+            fontWeight = FontWeight.Normal,
         )
     }
 }
 
 @Composable
-private fun StepHeading(title: String, subtitle: String) {
-    Text(
-        text = title,
-        style = MaterialTheme.typography.headlineMedium,
-        color = WisepennyColors.TextPrimary,
-    )
-    Text(
-        text = subtitle,
-        style = MaterialTheme.typography.bodyMedium,
-        color = WisepennyColors.TextTertiary,
-    )
+private fun PrimaryButton(text: String, enabled: Boolean, onClick: () -> Unit) {
+    Button(
+        onClick = onClick,
+        enabled = enabled,
+        shape = WisepennyShapes.large,
+        colors = ButtonDefaults.buttonColors(
+            containerColor = WisepennyColors.AccentMint,
+            contentColor = WisepennyColors.TextOnLight,
+            disabledContainerColor = WisepennyColors.BorderSubtle,
+            disabledContentColor = WisepennyColors.TextDisabled,
+        ),
+        contentPadding = androidx.compose.foundation.layout.PaddingValues(vertical = Spacing.md),
+        modifier = Modifier.fillMaxWidth(),
+    ) {
+        Text(text = text, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+    }
 }
 
 @Composable
-private fun SelectChip(
-    text: String,
+private fun BackButton(onBack: () -> Unit) {
+    Box(
+        modifier = Modifier
+            .size(40.dp)
+            .clip(CircleShape)
+            .clickable(onClick = onBack),
+        contentAlignment = Alignment.Center,
+    ) {
+        Text("←", fontSize = 24.sp, color = WisepennyColors.TextPrimary)
+    }
+}
+
+@Composable
+private fun OnboardingProgressBar(fraction: Float, modifier: Modifier = Modifier) {
+    Box(
+        modifier = modifier
+            .height(6.dp)
+            .clip(RoundedCornerShape(50))
+            .background(WisepennyColors.BorderSubtle),
+    ) {
+        Box(
+            modifier = Modifier
+                .fillMaxWidth(fraction.coerceIn(0f, 1f))
+                .height(6.dp)
+                .clip(RoundedCornerShape(50))
+                .background(WisepennyColors.AccentMint),
+        )
+    }
+}
+
+/** A selectable list row: leading badge, title, optional subtitle, trailing check. */
+@Composable
+private fun OptionRow(
+    selected: Boolean,
+    onClick: () -> Unit,
+    leading: @Composable () -> Unit,
+    title: String,
+    subtitle: String? = null,
+) {
+    val border = if (selected) WisepennyColors.AccentMint else WisepennyColors.BorderSubtle
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(WisepennyShapes.medium)
+            .background(WisepennyColors.SurfaceElevated)
+            .border(if (selected) 1.5.dp else 1.dp, border, WisepennyShapes.medium)
+            .clickable(onClick = onClick)
+            .padding(Spacing.md),
+        horizontalArrangement = Arrangement.spacedBy(Spacing.md),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        leading()
+        Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(Spacing.xxs)) {
+            Text(
+                text = title,
+                style = MaterialTheme.typography.titleMedium,
+                color = WisepennyColors.TextPrimary,
+                fontWeight = FontWeight.Bold,
+            )
+            if (subtitle != null) {
+                Text(
+                    text = subtitle,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = WisepennyColors.TextTertiary,
+                )
+            }
+        }
+        CheckCircle(selected)
+    }
+}
+
+@Composable
+private fun CheckCircle(selected: Boolean) {
+    if (selected) {
+        Box(
+            modifier = Modifier.size(28.dp).clip(CircleShape).background(WisepennyColors.AccentMint),
+            contentAlignment = Alignment.Center,
+        ) {
+            Text("✓", fontSize = 15.sp, color = WisepennyColors.TextOnLight, fontWeight = FontWeight.Bold)
+        }
+    } else {
+        Box(
+            modifier = Modifier
+                .size(28.dp)
+                .clip(CircleShape)
+                .border(1.5.dp, WisepennyColors.BorderSubtle, CircleShape),
+        )
+    }
+}
+
+@Composable
+private fun SymbolBadge(symbol: String, selected: Boolean) {
+    Box(
+        modifier = Modifier
+            .size(48.dp)
+            .clip(CircleShape)
+            .background(if (selected) WisepennyColors.AccentMint else WisepennyColors.SurfaceElevated)
+            .then(
+                if (selected) Modifier
+                else Modifier.border(1.5.dp, WisepennyColors.BorderSubtle, CircleShape)
+            ),
+        contentAlignment = Alignment.Center,
+    ) {
+        Text(
+            text = symbol,
+            style = MaterialTheme.typography.titleMedium,
+            color = if (selected) WisepennyColors.TextOnLight else WisepennyColors.TextPrimary,
+            fontWeight = FontWeight.Bold,
+        )
+    }
+}
+
+@Composable
+private fun EmojiBadge(emoji: String) {
+    Box(
+        modifier = Modifier
+            .size(48.dp)
+            .clip(CircleShape)
+            .background(WisepennyColors.BackgroundPrimary)
+            .border(1.dp, WisepennyColors.BorderSubtle, CircleShape),
+        contentAlignment = Alignment.Center,
+    ) {
+        Text(text = emoji, style = MaterialTheme.typography.titleMedium)
+    }
+}
+
+@Composable
+private fun LetterBadge(letter: String, selected: Boolean) {
+    Box(
+        modifier = Modifier
+            .size(48.dp)
+            .clip(CircleShape)
+            .background(if (selected) WisepennyColors.AccentMint else WisepennyColors.SurfaceElevated)
+            .then(
+                if (selected) Modifier
+                else Modifier.border(1.5.dp, WisepennyColors.BorderSubtle, CircleShape)
+            ),
+        contentAlignment = Alignment.Center,
+    ) {
+        Text(
+            text = letter,
+            style = MaterialTheme.typography.titleMedium,
+            color = if (selected) WisepennyColors.TextOnLight else WisepennyColors.TextPrimary,
+            fontWeight = FontWeight.Bold,
+        )
+    }
+}
+
+@Composable
+private fun CategoryCard(
+    category: OnboardingCategory,
     selected: Boolean,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    val container = if (selected) WisepennyColors.AccentMintSoft else WisepennyColors.SurfaceElevated
-    val content = if (selected) WisepennyColors.TextOnLight else WisepennyColors.TextSecondary
-    val borderColor = if (selected) WisepennyColors.AccentMint else WisepennyColors.BorderSubtle
+    val container = if (selected) WisepennyColors.SurfaceLight else WisepennyColors.SurfaceElevated
+    val labelColor = if (selected) WisepennyColors.TextOnLight else WisepennyColors.TextPrimary
     Box(
         modifier = modifier
-            .clip(WisepennyShapes.small)
+            .height(140.dp)
+            .clip(WisepennyShapes.medium)
             .background(container)
-            .border(1.dp, borderColor, WisepennyShapes.small)
+            .then(
+                if (selected) Modifier.border(2.dp, WisepennyColors.AccentMint, WisepennyShapes.medium)
+                else Modifier
+            )
             .clickable(onClick = onClick)
-            .padding(horizontal = Spacing.md, vertical = Spacing.md),
+            .padding(Spacing.md),
+    ) {
+        EmojiBadge(goalEmoji(category.iconKey))
+        if (selected) {
+            Box(modifier = Modifier.align(Alignment.TopEnd)) { CheckCircle(true) }
+        }
+        Text(
+            text = category.label,
+            style = MaterialTheme.typography.titleMedium,
+            color = labelColor,
+            fontWeight = FontWeight.Bold,
+            modifier = Modifier.align(Alignment.BottomStart),
+        )
+    }
+}
+
+@Composable
+private fun StepperButton(symbol: String, onClick: () -> Unit) {
+    Box(
+        modifier = Modifier
+            .size(56.dp)
+            .clip(CircleShape)
+            .border(1.5.dp, WisepennyColors.BorderSubtle, CircleShape)
+            .clickable(onClick = onClick),
         contentAlignment = Alignment.Center,
     ) {
+        Text(text = symbol, fontSize = 28.sp, color = WisepennyColors.TextSecondary, fontWeight = FontWeight.Normal)
+    }
+}
+
+@Composable
+private fun PresetChip(text: String, selected: Boolean, onClick: () -> Unit) {
+    val border = if (selected) WisepennyColors.AccentMint else WisepennyColors.BorderSubtle
+    val content = if (selected) WisepennyColors.AccentMint else WisepennyColors.TextSecondary
+    Box(
+        modifier = Modifier
+            .clip(RoundedCornerShape(50))
+            .border(1.5.dp, border, RoundedCornerShape(50))
+            .clickable(onClick = onClick)
+            .padding(horizontal = Spacing.lg, vertical = Spacing.sm),
+        contentAlignment = Alignment.Center,
+    ) {
+        Text(text = text, style = MaterialTheme.typography.titleMedium, color = content, fontWeight = FontWeight.Bold)
+    }
+}
+
+@Composable
+private fun MockNotificationCard() {
+    WisepennyCard(variant = WisepennyCardVariant.Elevated) {
+        Row(
+            horizontalArrangement = Arrangement.spacedBy(Spacing.md),
+            verticalAlignment = Alignment.Top,
+        ) {
+            EmojiBadge("🪙")
+            Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(Spacing.xxs)) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text(
+                        text = "WISEPENNY",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = WisepennyColors.AccentMint,
+                        fontWeight = FontWeight.Bold,
+                        letterSpacing = 1.sp,
+                        modifier = Modifier.weight(1f),
+                    )
+                    Text(
+                        text = "maintenant",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = WisepennyColors.TextTertiary,
+                    )
+                }
+                Text(
+                    text = "Ton défi du jour t'attend",
+                    style = MaterialTheme.typography.titleMedium,
+                    color = WisepennyColors.TextPrimary,
+                    fontWeight = FontWeight.Bold,
+                )
+                Text(
+                    text = "2 € à mettre de côté en renonçant à un café.",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = WisepennyColors.TextTertiary,
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun DemoCallout() {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(WisepennyShapes.medium)
+            .background(WisepennyColors.SurfaceElevated)
+            .border(1.dp, WisepennyColors.AccentMint, WisepennyShapes.medium)
+            .padding(Spacing.md),
+        horizontalArrangement = Arrangement.spacedBy(Spacing.md),
+        verticalAlignment = Alignment.Top,
+    ) {
+        Box(
+            modifier = Modifier
+                .clip(RoundedCornerShape(6.dp))
+                .background(WisepennyColors.AccentMint)
+                .padding(horizontal = Spacing.sm, vertical = Spacing.xxs),
+        ) {
+            Text(
+                text = "DÉMO",
+                style = MaterialTheme.typography.labelSmall,
+                color = WisepennyColors.TextOnLight,
+                fontWeight = FontWeight.Bold,
+            )
+        }
         Text(
-            text = text,
+            text = buildAnnotatedString {
+                append("Liaison ")
+                withStyle(SpanStyle(fontWeight = FontWeight.Bold)) { append("simulée") }
+                append(" : aucune banque n'est réellement contactée et aucune donnée ")
+                append("bancaire n'est collectée. Tu peux ignorer cette étape.")
+            },
             style = MaterialTheme.typography.bodyMedium,
-            color = content,
-            textAlign = TextAlign.Center,
+            color = WisepennyColors.TextSecondary,
+        )
+    }
+}
+
+/** The white goal card shown on the landing and completion screens. */
+@Composable
+private fun GoalPreviewCard(title: String, savedCents: Long, targetCents: Long, currency: String) {
+    val progress = if (targetCents > 0) savedCents.toFloat() / targetCents else 0f
+    WisepennyCard(variant = WisepennyCardVariant.Light) {
+        Row(
+            horizontalArrangement = Arrangement.spacedBy(Spacing.md),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Box(
+                modifier = Modifier.size(40.dp).clip(CircleShape).background(WisepennyColors.AccentMintSoft),
+                contentAlignment = Alignment.Center,
+            ) {
+                Box(modifier = Modifier.size(16.dp).clip(RoundedCornerShape(4.dp)).background(WisepennyColors.TextOnLight))
+            }
+            Text(
+                text = title,
+                style = MaterialTheme.typography.titleMedium,
+                color = WisepennyColors.TextOnLight,
+                fontWeight = FontWeight.Bold,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+                modifier = Modifier.weight(1f),
+            )
+            Box(
+                modifier = Modifier
+                    .clip(RoundedCornerShape(50))
+                    .background(WisepennyColors.SurfaceLightAlt)
+                    .padding(horizontal = Spacing.sm, vertical = Spacing.xxs),
+            ) {
+                Text(
+                    text = "Priorité",
+                    style = MaterialTheme.typography.labelSmall,
+                    color = WisepennyColors.TextOnLightMuted,
+                )
+            }
+        }
+        Row(verticalAlignment = Alignment.Bottom) {
+            Text(
+                text = formatMoney(savedCents, currency),
+                style = MaterialTheme.typography.headlineMedium,
+                color = WisepennyColors.TextOnLight,
+                fontWeight = FontWeight.ExtraBold,
+            )
+            Text(
+                text = " / ${formatMoney(targetCents, currency)}",
+                style = MaterialTheme.typography.titleMedium,
+                color = WisepennyColors.TextOnLightMuted,
+            )
+        }
+        SavingsProgressBar(
+            progress = progress,
+            trackColor = WisepennyColors.SurfaceLightAlt,
+            fillColor = WisepennyColors.AccentMintPressed,
+            modifier = Modifier.padding(top = Spacing.xs),
         )
     }
 }
@@ -442,7 +878,6 @@ private fun WisepennyTextField(
     onValueChange: (String) -> Unit,
     placeholder: String,
     keyboardType: KeyboardType = KeyboardType.Text,
-    suffix: String? = null,
 ) {
     OutlinedTextField(
         value = value,
@@ -450,26 +885,19 @@ private fun WisepennyTextField(
         placeholder = {
             Text(
                 text = placeholder,
-                style = MaterialTheme.typography.bodyMedium,
+                style = MaterialTheme.typography.titleMedium,
                 color = WisepennyColors.TextDisabled,
             )
         },
-        suffix = suffix?.let {
-            {
-                Text(
-                    text = it,
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = WisepennyColors.TextTertiary,
-                )
-            }
-        },
         singleLine = true,
         keyboardOptions = KeyboardOptions(keyboardType = keyboardType),
-        textStyle = MaterialTheme.typography.bodyMedium,
-        shape = WisepennyShapes.small,
+        textStyle = MaterialTheme.typography.titleMedium,
+        shape = WisepennyShapes.medium,
         colors = OutlinedTextFieldDefaults.colors(
             focusedTextColor = WisepennyColors.TextPrimary,
             unfocusedTextColor = WisepennyColors.TextPrimary,
+            focusedContainerColor = WisepennyColors.SurfaceElevated,
+            unfocusedContainerColor = WisepennyColors.SurfaceElevated,
             focusedBorderColor = WisepennyColors.AccentMint,
             unfocusedBorderColor = WisepennyColors.BorderSubtle,
             cursorColor = WisepennyColors.AccentMint,
@@ -478,32 +906,18 @@ private fun WisepennyTextField(
     )
 }
 
-@Composable
-private fun StepIndicator(step: OnboardingStep) {
-    Row(
-        modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.spacedBy(Spacing.xs),
-    ) {
-        OnboardingStep.entries.forEach { s ->
-            val active = s.ordinal <= step.ordinal
-            Box(
-                modifier = Modifier
-                    .weight(1f)
-                    .height(4.dp)
-                    .clip(RoundedCornerShape(50))
-                    .background(if (active) WisepennyColors.AccentMint else WisepennyColors.BorderSubtle),
-            )
-        }
-    }
-}
+// ---------------------------------------------------------------------------
+// Money formatting
+// ---------------------------------------------------------------------------
 
 private fun currencySymbol(code: String): String = when (code) {
-    "USD" -> "$"
+    "USD", "CAD" -> "$"
     "GBP" -> "£"
+    "CHF" -> "CHF"
     else -> "€"
 }
 
-/** French thousands grouping with the currency symbol — e.g. 4000 -> "40 €". */
+/** French thousands grouping with the currency symbol — e.g. 300000 -> "3 000 €". */
 private fun formatMoney(cents: Long, currency: String): String {
     val units = cents / 100
     val grouped = units.toString()
@@ -514,32 +928,25 @@ private fun formatMoney(cents: Long, currency: String): String {
     return "$grouped ${currencySymbol(currency)}"
 }
 
-private val FrenchMonths = listOf(
-    "janvier", "février", "mars", "avril", "mai", "juin",
-    "juillet", "août", "septembre", "octobre", "novembre", "décembre",
-)
-
-private fun formatMonthYear(d: LocalDate): String = "${FrenchMonths[d.month.ordinal]} ${d.year}"
-
 @Preview
 @Composable
-private fun OnboardingPreviewStepPreview() {
+private fun OnboardingAmountPreview() {
     WisepennyTheme {
         OnboardingScreen(
             state = OnboardingUiState(
-                today = LocalDate(2026, 7, 9),
-                step = OnboardingStep.PREVIEW,
-                motivation = OnboardingMotivation.ALL.first(),
-                name = "Voyage au Japon",
-                amountText = "3000",
-                horizonMonths = 12,
+                today = LocalDate(2026, 9, 9),
+                step = OnboardingStep.AMOUNT,
+                category = OnboardingCategory.ALL.first(),
+                amountUnits = 3000,
             ),
             onCurrencySelect = {},
             onMotivationSelect = {},
             onFirstNameChange = {},
-            onNameChange = {},
-            onAmountChange = {},
-            onHorizonSelect = {},
+            onCategorySelect = {},
+            onAmountIncrement = {},
+            onAmountDecrement = {},
+            onAmountPreset = {},
+            onBankSelect = {},
             onBack = {},
             onNext = {},
             onSkip = {},
