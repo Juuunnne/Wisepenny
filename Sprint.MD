@@ -1,16 +1,48 @@
-# Wisepenny — 4-Week Agile Sprint Plan
+# Wisepenny — Sprint Plan & Execution Record
 
-> **Status.** Validated V2 plan after audit. Honest S4 arithmetic, assumed buffer capacity, separated US for measurable velocity, formalized test plan (C2.3.1), lightweight ceremonies.
+> **Status.** Two-part document. **Part 1** is the original 4-week V2 sprint plan, validated and committed before Day 1 (2026-05-26) — kept unchanged below for traceability (RNCP C3.1, C3.2.2). **Part 2**, added 2026-09-15, is the **execution record**: what actually shipped, the scope/timeline arbitrations made along the way, and what is still open. Read the Execution Summary first — it tells you which parts of Part 1 are historical intent vs. current reality.
 >
-> **Framework.** Adapted solo Scrum. 4 one-week sprints. Capacity 4.5h × 5 weekdays + 4h Saturday = **26.5h "committable" / sprint**, Sunday kept as **uncommitted catch-up buffer**. Total committable: **106h over 28 days**.
+> **Framework (as planned).** Adapted solo Scrum. 4 one-week sprints. Capacity 4.5h × 5 weekdays + 4h Saturday = **26.5h "committable" / sprint**, Sunday kept as **uncommitted catch-up buffer**. Total committable: **106h over 28 days**. *(Not how it actually went — see Execution Summary.)*
 >
-> **Stack.** Compose Multiplatform, Kotlin Multiplatform, SQLDelight, Ktor, Koin, kotlinx.serialization, kotlinx.datetime.
+> **Stack (as planned).** Compose Multiplatform, Kotlin Multiplatform, SQLDelight, Ktor, Koin, kotlinx.serialization, kotlinx.datetime.
 >
-> **Setup already in place.** KMP project created, folder structure ready, design style guide validated.
+> **Stack (as actually built).** All of the above, plus a real backend: **Ktor Server, Exposed ORM, PostgreSQL, JWT auth, BCrypt**, tested end-to-end with **Testcontainers**; **Detekt + Ktlint** static analysis; **Dependabot** dependency watch.
+>
+> **Setup already in place (Day 1).** KMP project created, folder structure ready, design style guide validated.
+
+---
+
+## Execution Summary (added 2026-09-15)
+
+The plan below was validated and locked before Day 1. Here is what actually happened over the ~16 weeks since.
+
+- **Timeline.** The project has run **2026-05-26 → 2026-09-15 (112 days, ~16 weeks)** and is still open — roughly **4× the 28-day box** committed in the V2 plan. There was no formal daily-log / retro cadence as specified in the Ceremonies section; `CHANGELOG.md` and the Git history serve as the de facto record instead.
+- **Major arbitration — the backend.** The V2 plan committed to *"mock remote = final backend"* (a client-side Ktor `MockEngine`). That commitment was **superseded**: starting with `v0.5.0` (2026-07-22) the project built a real **simulated Open Banking server** — Ktor Server + Exposed/PostgreSQL + JWT + BCrypt, covered by end-to-end Testcontainers tests — matching the architecture already scoped in `CONTEXT.md` §3. It's a bigger build than planned, but it's what makes the CI, deployment manual, and Bloc 4 supervision/security deliverables demonstrable with real artifacts instead of a description of what a mock would need.
+- **New scope not in the original V2 backlog.** A full **Bloc 4 (Maintenir en condition opérationnelle)** deliverable set was added mid-project: dependency-update process (`docs/dependances.md` + Dependabot), supervision & alerting (`docs/supervision.md` + `/health`, `/health/ready`), an anomaly-logging process (`docs/anomalies/processus.md`, GitHub issue template, `ANO-001`), and improvement recommendations (`docs/recommandations-amelioration.md`). None of this existed as a story in the V2 backlog. A unified **Wisepenny UI component library** + UX-cohesion spec, and a GDPR-facing **profile/privacy screen** (data reset, privacy notice, About) were also built without a corresponding US in the original plan.
+- **Stories from the original backlog still open.** US-08 (badge system) was never built — no `Badge` model/table in the codebase. US-12 (daily reminder) has a UI toggle only; no platform notification scheduling (`AlarmManager` / `UNUserNotificationCenter`) exists. US-13 (OPQUAST/RGAA accessibility audit) and a formal OWASP audit document (part of US-14) are explicitly flagged as **not yet covered** in `docs/recommandations-amelioration.md`. US-17 (a written acceptance-test plan with a Gherkin execution log) was never produced as a document — automated tests exist (3 client test files, 1 server integration test file, CI-enforced) but there is no `docs/acceptance-tests/` folder. TECH-03 (cumulative ADRs, 8+ files) was never delivered as literal ADR files — no `docs/decisions/` folder exists; decisions are instead narrated in `CHANGELOG.md` and `CONTEXT.md`. iOS was never added to CI (`ci.yml` runs Android/JVM unit tests + server integration tests only) — so the Definition of Done clause "Android **and** iOS builds green (CI-verified)" has not actually been enforced by CI for any story.
+- **Where this leaves the plan.** The backlog table, Gherkin scenarios, DoR/DoD, ceremonies and per-sprint breakdowns below are kept as originally written — still useful as the *committed* plan for arbitration purposes — but each section now carries a short "Actual" note pointing at what really happened. See the **Actual Release Timeline**, the updated **Product Backlog** status column, **Delivered Beyond the Original Backlog**, the updated **RNCP Criteria Mapping**, and **Current Status & Remaining Work** near the end for the full picture.
+
+### Actual Release Timeline
+
+| Version | Date | Day # | Roughly maps to (V2 plan) | Content |
+|---|---|---|---|---|
+| 0.1.0 | 2026-06-02 | Day 7 | S1 (TECH-00, US-01, US-02) + S2 (US-03–05) + part of S3 (US-06, US-07) | KMP foundations, Challenge domain/data/UI, Goals, Dashboard, Compose navigation, Koin DI |
+| 0.2.0 | 2026-06-25 | Day 30 | S4 (US-11) | Narrative learning module ("Apprendre"), no quizzes |
+| 0.3.0 | 2026-07-11 | Day 46 | S4 (US-10) | Onboarding flow v1, profile ViewModel, back-gesture policy |
+| 0.4.0 | 2026-07-14 | Day 49 | S1 (TECH-01) / S3 (US-15, Android-only) | CI pipeline (Android unit tests), auto-save & mapper tests, cross-platform `BackHandler` |
+| 0.5.0 | 2026-07-22 | Day 57 | **Not in the V2 backlog as scoped** — supersedes "mock remote = final backend" | Real Ktor server, PostgreSQL/Exposed, JWT auth, `API_SPEC.md`, Testcontainers e2e tests, server CI, deployment/user manuals (US-16 partial) |
+| 0.6.0 | 2026-07-24 | Day 59 | Not in the V2 backlog | Wisepenny design-system components, UX-cohesion spec, Detekt + Ktlint, daily-challenge promo card |
+| 0.7.0 | 2026-07-27 | Day 62 | Loosely covers the RGPD half of US-14 | Profile screen, GDPR privacy notice, full data reset (droit à l'effacement), About window |
+| 0.8.0 | 2026-08-16 | Day 82 | New Bloc 4 scope, not in the V2 backlog | `/health/ready` probe, `docs/supervision.md`, structured HTTP logging + rotation, Dependabot, anomaly process + `ANO-001` fix |
+| *unreleased* | 2026-08-19 → 2026-09-14 | Day 85–111 | BC04 doc completion + US-10 rework | `docs/dependances.md`, `docs/recommandations-amelioration.md`, `docs/support-client-exemple.md`; profile/settings polish + custom tab bar; onboarding rebuilt as a 7-step wizard (categories, 6-month horizon, demo bank) |
+
+*(The V2 plan's "1 SP ≈ 1h15" velocity tracking was not kept up after Day 1 — there are no daily hour logs, so story points cannot be reconstructed retroactively. Elapsed calendar time and shipped versions are the honest signal available.)*
 
 ---
 
 ## V1 Audit — Corrections Applied
+
+*(Historical — the V1→V2 audit that produced the plan below. Unchanged.)*
 
 | # | V1 Problem | V2 Correction |
 |---|---|---|
@@ -25,35 +57,53 @@
 
 ## Product Backlog (MoSCoW prioritized)
 
-| ID | User Story | MVP Feature | SP | Priority |
-|---|---|---|---|---|
-| US-01 | Track an active savings challenge (read-only) | Active Challenge | 5 | Must |
-| US-02 | Validate each challenge day (write + streak) | Active Challenge | 5 | Must |
-| US-03 | View my savings goals | Savings Goal | 5 | Must |
-| US-04 | Manually add money toward a goal | Savings Goal | 3 | Must |
-| US-05 | Auto-credit from challenge to goal | Savings Goal | 3 | Must |
-| US-06 | Aggregated dashboard as home screen | Dashboard | 8 | Must |
-| US-07 | 4-tab bottom navigation | Dashboard | 3 | Must |
-| US-08 | Earn badges (6 initial badges) | Gamification | 5 | Must |
-| US-09 | Global app streak | Habit tracking | 3 | Must |
-| US-10 | 4-screen express onboarding | Onboarding | 8 | Must |
-| US-11 | Narrative learning module | Learning | 5 | Must |
-| US-12 | Daily challenge reminder (local notification) | Reminders | 3 | Must |
-| US-13 | OPQUAST accessibility audit + fixes | Accessibility | 5 | Must (RNCP) |
-| US-14 | OWASP security audit + local encryption | Security | 5 | Must (RNCP) |
-| US-15 | Complete CI/CD (Android + iOS + tests + lint) | DevOps | 3 | Must (RNCP) |
-| US-16 | 3 manuals (deployment, user, update) | Documentation | 5 | Must (RNCP) |
-| **US-17** | **Test plan + bug correction plan** | **Acceptance Testing** | **3** | **Must (RNCP)** |
-| TECH-00 | Residual KMP setup (theme, DB, Ktor, Koin, nav) | Foundation | 8 | Must |
-| TECH-01 | Minimal CI pipeline Sprint 1 | DevOps | 2 | Should |
-| TECH-02 | Demo mode + script + backup video | Defense Prep | 3 | Must |
-| TECH-03 | Cumulative ADRs (8+ files) | Documentation | _0_ | Continuous |
-| **Backlog Total** | | | **85 SP** | |
-| **Sprint-Committed Total** | | | **87 SP** | |
+| ID | User Story | MVP Feature | SP | Priority | Status (2026-09-15) | Note |
+|---|---|---|---|---|---|---|
+| US-01 | Track an active savings challenge (read-only) | Active Challenge | 5 | Must | ✅ Done | Shipped v0.1.0 |
+| US-02 | Validate each challenge day (write + streak) | Active Challenge | 5 | Must | ✅ Done | Shipped v0.1.0 |
+| US-03 | View my savings goals | Savings Goal | 5 | Must | ✅ Done | Shipped v0.1.0 |
+| US-04 | Manually add money toward a goal | Savings Goal | 3 | Must | ✅ Done | Shipped v0.1.0 |
+| US-05 | Auto-credit from challenge to goal | Savings Goal | 3 | Must | ✅ Done | Shipped v0.1.0 |
+| US-06 | Aggregated dashboard as home screen | Dashboard | 8 | Must | ✅ Done | Shipped v0.1.0 |
+| US-07 | 4-tab bottom navigation | Dashboard | 3 | Must | ✅ Done | Shipped v0.1.0; bottom bar rebuilt custom (Sept 2026) |
+| US-08 | Earn badges (6 initial badges) | Gamification | 5 | Must | ❌ Not built | No `Badge` model/table in the codebase |
+| US-09 | Global app streak | Habit tracking | 3 | Must | ⚠️ Partial | Streak logic exists on Dashboard/Challenge; not confirmed as a distinct cross-feature "global" streak |
+| US-10 | 4-screen express onboarding | Onboarding | 8 | Must | ✅ Done (reworked) | v1 in v0.3.0; rebuilt as a 7-step wizard 2026-09-14 |
+| US-11 | Narrative learning module | Learning | 5 | Must | ✅ Done | Shipped v0.2.0 |
+| US-12 | Daily challenge reminder (local notification) | Reminders | 3 | Must | ⚠️ Partial | UI toggle only (Profile screen); no `AlarmManager`/`UNUserNotificationCenter` scheduling found |
+| US-13 | OPQUAST accessibility audit + fixes | Accessibility | 5 | Must (RNCP) | ⏳ Open | Flagged as not yet covered in `docs/recommandations-amelioration.md` (axis 2) |
+| US-14 | OWASP security audit + local encryption | Security | 5 | Must (RNCP) | ⚠️ Partial | JWT + BCrypt + input validation shipped; no formal `docs/security/owasp-mobile-audit.md` written |
+| US-15 | Complete CI/CD (Android + iOS + tests + lint) | DevOps | 3 | Must (RNCP) | ⚠️ Partial | CI runs Android/JVM unit tests + server integration tests; no iOS runner; Detekt/Ktlint not wired into CI |
+| US-16 | 3 manuals (deployment, user, update) | Documentation | 5 | Must (RNCP) | ✅ Done | `docs/deploiement.md`, `docs/utilisation.md`, `docs/mise-a-jour.md` |
+| **US-17** | **Test plan + bug correction plan** | **Acceptance Testing** | **3** | **Must (RNCP)** | ⏳ Open | Automated tests + `docs/anomalies/` process exist; no `docs/acceptance-tests/test-plan.md` with a Gherkin execution log |
+| TECH-00 | Residual KMP setup (theme, DB, Ktor, Koin, nav) | Foundation | 8 | Must | ✅ Done | Shipped v0.1.0 |
+| TECH-01 | Minimal CI pipeline Sprint 1 | DevOps | 2 | Should | ✅ Done | Shipped v0.4.0 |
+| TECH-02 | Demo mode + script + backup video | Defense Prep | 3 | Must | ⏳ Open | No demo-mode/backup-video artifact found |
+| TECH-03 | Cumulative ADRs (8+ files) | Documentation | _0_ | Continuous | ❌ Not built | No `docs/decisions/` folder; decisions narrated in `CHANGELOG.md`/`CONTEXT.md` instead |
+| **Backlog Total** | | | **85 SP** | | | |
+| **Sprint-Committed Total** | | | **87 SP** | | | |
 
-**2 SP delta explained.** Difference comes from TECH-02 (demo mode) split 2+3 across S1 (debug button) and S4 (full demo mode), plus TECH-04/05/06/07 in Sprint 2 which are operational task breakdowns of stories US-03/US-04/US-05 (already counted in backlog). Expected delta from story→task conversion in Scrum.
+**2 SP delta explained** *(as planned)*. Difference comes from TECH-02 (demo mode) split 2+3 across S1 (debug button) and S4 (full demo mode), plus TECH-04/05/06/07 in Sprint 2 which are operational task breakdowns of stories US-03/US-04/US-05 (already counted in backlog). Expected delta from story→task conversion in Scrum.
 
-**Velocity note.** 1 SP ≈ 1h15 effective on average for KMP stack with tests + ADR + dual build. Capacity 4 sprints × 26.5h = 106h → **~87 SP achievable**. Backlog fits **without margin**: Sunday buffers (12h) absorb variance.
+**Velocity note** *(as planned — not how it was actually tracked; see Execution Summary)*. 1 SP ≈ 1h15 effective on average for KMP stack with tests + ADR + dual build. Capacity 4 sprints × 26.5h = 106h → **~87 SP achievable**. Backlog fits **without margin**: Sunday buffers (12h) absorb variance.
+
+### Delivered Beyond the Original Backlog
+
+Work that shipped without a corresponding story in the V2 plan above:
+
+| Item | Release | RNCP value |
+|---|---|---|
+| Real simulated Open Banking server (Ktor + Exposed + PostgreSQL + JWT + BCrypt) | v0.5.0 | Supersedes "mock remote"; gives C2.1/C2.2/C4 real artifacts instead of a description |
+| API end-to-end tests with Testcontainers | v0.5.0 | C2.2.2 |
+| Wisepenny UI component library + UX-cohesion spec | v0.6.0 | Centralizes styling — `docs/recommandations-amelioration.md` notes this gives leverage for the still-open accessibility pass |
+| Detekt + Ktlint static analysis | v0.6.0 | C2.2.3 (maintainability); not yet wired into CI |
+| GDPR profile & privacy screen (data reset, privacy notice, About) | v0.7.0 | RGPD compliance |
+| Readiness/liveness probes + structured HTTP logging | v0.8.0 | C4.1.2 |
+| Dependabot + dependency-update process doc | v0.8.0 | C4.1.1 |
+| Anomaly logging process + issue template + `ANO-001` | v0.8.0 | C4.2.1 |
+| Improvement-recommendations doc | unreleased | C4.3.1 |
+| Client-support example doc | unreleased | Bloc 4 |
+| Onboarding rebuilt as a 7-step wizard (categories, fixed 6-month horizon, demo bank picker) | unreleased | Reworks US-10 beyond the original 4-screen scope |
 
 ---
 
@@ -80,6 +130,8 @@ A user story is "done" if **all** items are checked:
 - [ ] **Acceptance test scenario added to `docs/acceptance-tests/`** (covers C2.3.1)
 - [ ] Gherkin criterion is demonstrable
 
+> **Actual (2026-09-15).** The "Android **and** iOS builds green (CI-verified)" clause was never enforced by CI in practice — `ci.yml` only runs Android/JVM unit tests and server integration tests, no iOS runner. Same for the ADR and `docs/acceptance-tests/` clauses: no story went through those two boxes as literally written. Treat this DoD as the target, not a record of what was checked per story.
+
 ---
 
 ## Lightweight Ceremonies (60 min max / sprint)
@@ -93,11 +145,15 @@ A user story is "done" if **all** items are checked:
 
 **Refinement removed** — replaced by 10 min at end of Sprint Planning to validate DoR of current sprint stories only. Future sprint stories already have pre-validated DoR in this document.
 
+> **Actual (2026-09-15).** No `daily-log.md` or `retro-sX.md` files exist in the repo — this ceremony cadence was not kept as written. `CHANGELOG.md` entries and commit history are the de facto substitute record.
+
 ---
 
 # SPRINT 1 — Foundation & Active Challenge
 
 **Day 1 (Monday) → Day 7 (Sunday).** Committed capacity 26.5h (Sunday buffer). Commitment: **22 SP**.
+
+> **Actual.** TECH-00, US-01, US-02 shipped — and, ahead of schedule, the whole S2/S3 CRUD surface (Goals, Dashboard, navigation) shipped together in `v0.1.0` on 2026-06-02, about a week after Day 1. TECH-01 (CI) followed much later, in `v0.4.0` (2026-07-14, Day 49). TECH-02's debug button is not confirmed in the current codebase.
 
 ### Sprint Goal
 
@@ -224,6 +280,8 @@ If everything is green: rest. Otherwise: catch-up. The buffer is your safety val
 
 **D8 → D14.** Capacity 26.5h. Commitment **21 SP**.
 
+> **Actual.** US-03/04/05 shipped as part of `v0.1.0` alongside S1, not as a standalone week-2 sprint. TECH-04–07 (projection, goal picker, S1 refactor, ADR-002) are not individually verifiable in the current codebase or docs — no `docs/decisions/ADR-002*` file exists.
+
 ### Sprint Goal
 
 > Enable goal viewing, manual contributions, and automatic challenge → goal crediting. Demonstrate successful replication of S1 pattern.
@@ -312,6 +370,8 @@ Scenario: Automatic crediting
 # SPRINT 3 — Dashboard, Navigation, Gamification & Partial RNCP
 
 **D15 → D21.** Capacity 26.5h. Commitment **22 SP**.
+
+> **Actual.** US-06/07 shipped as part of `v0.1.0` alongside S1/S2. US-08 (badges) was never built. US-09 (streak) exists on Dashboard/Challenge but is not confirmed as a distinct global mechanism. US-15 (CI/CD) shipped partially in `v0.4.0` (2026-07-14) — Android/server tests only, no iOS runner, no Detekt/Ktlint step in CI.
 
 ### Sprint Goal
 
@@ -411,6 +471,8 @@ Scenario: First badge
 # SPRINT 4 — Onboarding, Learning, Reminders + RNCP Delivery
 
 **D22 → D28.** Capacity 26.5h. Commitment **22 SP**.
+
+> **Actual.** US-10 shipped in `v0.3.0` (2026-07-11) — much earlier than the original S4 slot — then rebuilt as a 7-step wizard on 2026-09-14. US-11 also shipped earlier than planned, in `v0.2.0` (2026-06-25). US-12 is UI-only (no scheduling). US-13 (accessibility) and the formal US-14 OWASP audit document are still open — see `docs/recommandations-amelioration.md`. US-16 (3 manuals) is done. US-17 (test plan doc) was never written. TECH-02 (demo mode/backup video) was not found in the repo.
 
 ### Sprint Goal
 
@@ -541,6 +603,8 @@ From least to most critical:
 
 **Never cut:** OWASP, basic OPQUAST, test plan, manuals, demo mode, backup video.
 
+> **Actual outcome of this cut plan (2026-09-15).** Cut #3 (iOS CI) happened by default rather than by decision — iOS was never wired into `ci.yml`. Cuts #1 and #2 aren't applicable yet since accessibility work and the learning module's section count were never revisited against this plan. The formally "never cut" items — OWASP audit doc, OPQUAST audit, test plan, demo mode, backup video — are the ones still outstanding; see **Current Status & Remaining Work** below.
+
 ### S4 Risks
 
 | Risk | Probability | Impact | Mitigation |
@@ -552,7 +616,24 @@ From least to most critical:
 
 ---
 
+## Current Status & Remaining Work (as of 2026-09-15)
+
+Per `docs/recommandations-amelioration.md` (BC04, self-assessed) and the gaps identified throughout this document:
+
+1. **Accessibility (US-13, RNCP-critical).** No RGAA/OPQUAST audit performed yet. The now-centralized Wisepenny component library (v0.6.0) means a single pass over shared components should propagate everywhere — flagged as high-leverage, 5–8 person-days.
+2. **Formal security audit doc (US-14, RNCP-critical).** JWT, BCrypt and input validation are implemented, but there is no written OWASP Top 10 mapping document for the jury dossier.
+3. **Acceptance test plan (US-17, RNCP-critical).** Automated tests exist and run in CI; a written Gherkin-based `docs/acceptance-tests/test-plan.md` with execution status per scenario has not been produced.
+4. **iOS in CI.** `ci.yml` never gained an iOS/macOS runner — the DoD clause "Android and iOS builds green (CI-verified)" has not been enforced by CI for any story. Flagged as axis 4 in `docs/recommandations-amelioration.md`.
+5. **Demo mode & backup video (TECH-02).** Not found in the codebase or docs — still needed before defense.
+6. **ADRs as files (TECH-03).** Decisions exist in `CHANGELOG.md`/`CONTEXT.md` narrative form, not as the originally committed `docs/decisions/ADR-*.md` files.
+7. **Badges (US-08) and scheduled reminders (US-12).** Deferred; not built beyond a UI toggle for reminders.
+8. **Longer-term, non-blocking** (per `docs/recommandations-amelioration.md`): real bank connection (axis 1), containerized deployment with a live uptime monitor (axis 3), offline sync/conflict resolution (axis 5) — all explicitly scoped as post-MVP.
+
+---
+
 ## Project Dashboard (to be maintained)
+
+> **Note (2026-09-15).** This weekly SP/hours table was never filled in — the project did not run on a weekly-sprint cadence in practice. See **Actual Release Timeline** near the top of this document for the real record.
 
 | Sprint | Committed SP | Completed SP | Velocity | Actual hours / budget | Sprint goal ✓ |
 |---|---|---|---|---|---|
@@ -562,27 +643,32 @@ From least to most critical:
 | S4 | 22 | _____ | _____ | _____ / 26.5h | _____ |
 | **Total** | **87** | _____ | _____ | _____ / 106h | _____ |
 
-**Velocity note.** 87 SP × 1.22h/SP ≈ 106h. Fits exactly within committable capacity. Sundays D7, D14, D21 are pure buffer (12h additional available if slippage). D28 is committed for final rehearsals.
+**Velocity note** *(as planned)*. 87 SP × 1.22h/SP ≈ 106h. Fits exactly within committable capacity. Sundays D7, D14, D21 are pure buffer (12h additional available if slippage). D28 is committed for final rehearsals.
 
 Direct RNCP deliverable for **C3.2.1** (progress monitoring) and **C3.2.2** (arbitrations).
 
 ---
 
-## RNCP Criteria → V2 Mapping
+## RNCP Criteria → Actual Mapping (updated 2026-09-15)
 
-| Criterion | Sprint | Artifact |
+| Criterion | Status | Artifact |
 |---|---|---|
-| C2.1.1, C2.1.2 (environments, CI) | S1 (TECH-01) + S3 (US-15) | `.github/workflows/`, manuals |
-| C2.2.1 (prototype) | From S1 | Demonstrable app |
-| C2.2.2 (unit tests) | Continuous S1→S4 | Test suite + coverage |
-| C2.2.3 (security + accessibility + maintainability) | S4 (US-13, US-14) | OWASP + OPQUAST audits |
-| C2.2.4 (progressive deployment) | S3 (US-15) | Versioned CI pipeline |
-| **C2.3.1, C2.3.2 (acceptance tests, bugs)** | **S4 (US-17 — new)** | **Test plan + correction plan** |
-| C2.4.1 (documentation) | S4 (US-16) | 3 manuals + ADRs |
-| C3.1 (planning) | This document | Plan + actual post-sprint planning |
-| C3.2.1 (monitoring) | Continuous | Daily logs + dashboard + review videos |
-| C3.2.2 (arbitrations) | Continuous | ADRs + documented cut plan |
-| C3.4.1, C3.4.2 (client follow-up, demo) | S4 D26-D28 | Review videos + demo + script |
+| C2.1.1, C2.1.2 (environments, CI) | ⚠️ Partial | `.github/workflows/ci.yml` — Android/JVM unit tests + server Testcontainers integration tests; no iOS runner |
+| C2.2.1 (prototype) | ✅ | Working Android/iOS/desktop KMP app since `v0.1.0` |
+| C2.2.2 (unit tests) | ⚠️ Partial | 3 client test files (`StartupScreenTest`, `MapperTest`, `GoalRepositoryAutoSaveTest`) + 1 server integration test file (`ApiTest`); no formal coverage measurement |
+| C2.2.3 (security, accessibility, maintainability) | ⚠️ Partial | Security: JWT + BCrypt + input validation shipped, no formal OWASP audit doc. Accessibility: not yet covered — open axis in `docs/recommandations-amelioration.md`. Maintainability: Detekt + Ktlint configured but not enforced in CI |
+| C2.2.4 (progressive deployment) | ⚠️ Partial | CI pipeline exists; no containerized/staged deployment (open axis 3 in `docs/recommandations-amelioration.md`) |
+| C2.3.1, C2.3.2 (acceptance tests, bugs) | ⚠️ Partial | Automated tests + `docs/anomalies/` process (`ANO-001`) cover bug tracking; no `docs/acceptance-tests/test-plan.md` with a Gherkin execution log yet |
+| C2.4.1 (documentation) | ✅ | `docs/deploiement.md`, `docs/utilisation.md`, `docs/mise-a-jour.md` |
+| C3.1 (planning) | ✅ | This document (original plan + execution record) |
+| C3.2.1 (monitoring) | ⚠️ Partial | `CHANGELOG.md` + Git history are the de facto monitoring record; `daily-log.md`/`retro-sX.md` as originally planned were not kept |
+| C3.2.2 (arbitrations) | ✅ | This document's Execution Summary — mock→real backend pivot, Bloc 4 scope insertion, timeline extension |
+| C3.4.1, C3.4.2 (client follow-up, demo) | ⏳ Pending | Demo script + backup video (TECH-02) not yet produced |
+| C4.1.1 (dependency updates) | ✅ | `docs/dependances.md`, `.github/dependabot.yml` |
+| C4.1.2 (supervision) | ✅ | `docs/supervision.md`, `/health` and `/health/ready` routes |
+| C4.2.1 (anomaly logging) | ✅ | `docs/anomalies/processus.md`, `ANO-001` |
+| C4.3.1 (improvement recommendations) | ✅ | `docs/recommandations-amelioration.md` |
+| Bloc 4 (client support) | ✅ | `docs/support-client-exemple.md` |
 
 **C3.3 (team).** Solo project, to be adapted in defense: justified solo context + OPQUAST accessibility as disability proxy + communication mastery via ADRs and written retros.
 
@@ -591,7 +677,7 @@ Direct RNCP deliverable for **C3.2.1** (progress monitoring) and **C3.2.2** (arb
 ## Pre-Day 1 Commitments (to be formally locked)
 
 - [x] Streak policy: strict (ADR-001)
-- [x] Mock remote = final backend
+- [x] ~~Mock remote = final backend~~ ⚠️ **Superseded 2026-07-22 (`v0.5.0`)** — see Execution Summary: a real simulated Open Banking server was built instead
 - [x] No Compose UI tests (domain+data only)
 - [x] 1 learning module delivered
 - [x] Learning format: narrative only
@@ -605,16 +691,16 @@ Direct RNCP deliverable for **C3.2.1** (progress monitoring) and **C3.2.2** (arb
 
 ## Final Validation
 
-| Check | Status |
-|---|---|
-| Coherent SP arithmetic (22+21+22+22 = 87) | ✅ |
-| Coherent hour capacity (4×26.5 = 106h) | ✅ |
-| Realistic velocity (87 SP ≈ 106h at 1.22h/SP) | ✅ |
-| No overloaded sprint (max commitment = 22 SP) | ✅ |
-| C2.3.1 (test plan) explicitly covered | ✅ |
-| Buffer exists (Sundays except D28) | ✅ |
-| Documented cut plan for S4 | ✅ |
-| Risks identified per sprint | ✅ |
-| Pre-Day 1 commitments locked | ✅ |
+| Check | Status (as planned) | Status (2026-09-15) |
+|---|---|---|
+| Coherent SP arithmetic (22+21+22+22 = 87) | ✅ | N/A — SP tracking was not kept after Day 1 |
+| Coherent hour capacity (4×26.5 = 106h) | ✅ | N/A — no daily hour logs exist |
+| Realistic velocity (87 SP ≈ 106h at 1.22h/SP) | ✅ | ❌ Actual elapsed time is ~4× the planned 28 days, and still open |
+| No overloaded sprint (max commitment = 22 SP) | ✅ | N/A |
+| C2.3.1 (test plan) explicitly covered | ✅ | ⏳ Pending — automated tests + anomaly process exist, formal Gherkin test-plan doc not written |
+| Buffer exists (Sundays except D28) | ✅ | N/A — weekly buffer model was not used in practice |
+| Documented cut plan for S4 | ✅ | ⚠️ Not exercised as written; real gaps (accessibility, iOS CI) are documented instead in `docs/recommandations-amelioration.md` |
+| Risks identified per sprint | ✅ | ✅ Kept as historical planning artifact |
+| Pre-Day 1 commitments locked | ✅ | ⚠️ One commitment (mock remote = final backend) was revisited and superseded |
 
-**Plan validated. Ready to start Day 1 Monday morning.**
+**Plan validated 2026-05-25. Ready to start Day 1 Monday morning.** *(Execution record added 2026-09-15 — project ongoing; see Current Status & Remaining Work above for what's left.)*
