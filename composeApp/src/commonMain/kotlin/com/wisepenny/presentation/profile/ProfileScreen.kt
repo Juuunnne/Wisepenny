@@ -6,16 +6,11 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Switch
@@ -38,13 +33,12 @@ import androidx.compose.ui.unit.sp
 import com.wisepenny.presentation.components.WisepennyCard
 import com.wisepenny.presentation.components.WisepennyScaffold
 import com.wisepenny.presentation.components.WisepennyScreenHeader
-import com.wisepenny.presentation.onboarding.WelcomeContent
 import com.wisepenny.presentation.theme.Spacing
 import com.wisepenny.presentation.theme.WisepennyColors
 import com.wisepenny.presentation.theme.WisepennyShapes
 import com.wisepenny.presentation.theme.WisepennyTheme
 
-private enum class ProfileOverlay { NONE, CURRENCY, REPLAY, RGPD, ABOUT, RESET_CONFIRM }
+private enum class ProfileOverlay { NONE, CURRENCY, RGPD, ABOUT, RESET_CONFIRM }
 
 /** Currencies offered in the picker — mirrors the onboarding wizard's set. */
 private val PROFILE_CURRENCIES = listOf("EUR", "USD", "GBP")
@@ -94,14 +88,6 @@ fun ProfileScreen(
 
         SettingsSection(label = "Aide & informations") {
             SettingsRow(
-                emoji = "📖",
-                title = "Revoir l'introduction",
-                subtitle = "Redécouvrir les fonctionnalités",
-                onClick = { overlay = ProfileOverlay.REPLAY },
-                trailing = { Chevron() },
-            )
-            RowDivider()
-            SettingsRow(
                 emoji = "🔒",
                 title = "Confidentialité",
                 subtitle = "Conforme RGPD · tes données restent locales",
@@ -138,8 +124,7 @@ fun ProfileScreen(
             },
             onDismiss = { overlay = ProfileOverlay.NONE },
         )
-        ProfileOverlay.REPLAY -> ReplayOverlay(onClose = { overlay = ProfileOverlay.NONE })
-        ProfileOverlay.RGPD -> InfoDialog(
+        ProfileOverlay.RGPD -> InfoOverlay(
             title = "Confidentialité (RGPD)",
             body = "Wisepenny applique la minimisation des données : seules les " +
                 "informations nécessaires à ton épargne sont conservées, en local sur " +
@@ -148,7 +133,7 @@ fun ProfileScreen(
                 "« Réinitialiser mes données ».",
             onDismiss = { overlay = ProfileOverlay.NONE },
         )
-        ProfileOverlay.ABOUT -> InfoDialog(
+        ProfileOverlay.ABOUT -> InfoOverlay(
             title = "À propos",
             body = "Wisepenny — épargne et éducation financière pour les 18–26 ans.\n\n" +
                 "Version 0.8 (MVP)\nProjet capstone RNCP39583.",
@@ -376,63 +361,6 @@ private fun CurrencyPickerDialog(
                     }
                 }
             }
-        },
-        confirmButton = {
-            TextButton(onClick = onDismiss) {
-                Text(text = "Fermer", color = WisepennyColors.AccentMint)
-            }
-        },
-    )
-}
-
-@Composable
-private fun ReplayOverlay(onClose: () -> Unit) {
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(WisepennyColors.BackgroundPrimary)
-            .padding(horizontal = Spacing.xl)
-            .padding(top = Spacing.huge, bottom = Spacing.xl),
-        verticalArrangement = Arrangement.spacedBy(Spacing.xl),
-    ) {
-        Column(
-            modifier = Modifier.weight(1f).verticalScroll(rememberScrollState()),
-            verticalArrangement = Arrangement.spacedBy(Spacing.lg),
-        ) {
-            WelcomeContent()
-        }
-        Button(
-            onClick = onClose,
-            shape = WisepennyShapes.small,
-            colors = ButtonDefaults.buttonColors(
-                containerColor = WisepennyColors.AccentMint,
-                contentColor = WisepennyColors.TextOnLight,
-            ),
-            modifier = Modifier.fillMaxWidth(),
-        ) {
-            Text(text = "Fermer", style = MaterialTheme.typography.titleMedium)
-        }
-    }
-}
-
-@Composable
-private fun InfoDialog(title: String, body: String, onDismiss: () -> Unit) {
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        containerColor = WisepennyColors.SurfaceElevated,
-        title = {
-            Text(
-                text = title,
-                style = MaterialTheme.typography.titleMedium,
-                color = WisepennyColors.TextPrimary,
-            )
-        },
-        text = {
-            Text(
-                text = body,
-                style = MaterialTheme.typography.bodyMedium,
-                color = WisepennyColors.TextSecondary,
-            )
         },
         confirmButton = {
             TextButton(onClick = onDismiss) {

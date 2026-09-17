@@ -22,7 +22,7 @@ class ChallengeRepositoryImpl(
     private val goalQueries = database.goalQueries
     private val contributionQueries = database.contributionQueries
 
-    override fun observeActive(): Flow<Challenge?> = queries.selectActive()
+    override fun observeById(id: Long): Flow<Challenge?> = queries.selectById(id)
         .asFlow()
         .mapToOneOrNull(Dispatchers.IO)
         .map { row -> row?.toDomain() }
@@ -33,6 +33,11 @@ class ChallengeRepositoryImpl(
         .map { rows -> rows.map { it.toDomain() } }
 
     override fun observeActiveChallenges(): Flow<List<Challenge>> = queries.selectActiveAll()
+        .asFlow()
+        .mapToList(Dispatchers.IO)
+        .map { rows -> rows.map { it.toDomain() } }
+
+    override fun observeUnlinked(): Flow<List<Challenge>> = queries.selectUnlinked()
         .asFlow()
         .mapToList(Dispatchers.IO)
         .map { rows -> rows.map { it.toDomain() } }

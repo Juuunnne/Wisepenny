@@ -25,6 +25,8 @@ import com.wisepenny.presentation.dashboard.DashboardViewModel
 import com.wisepenny.presentation.goal.GoalDetailScreen
 import com.wisepenny.presentation.goal.GoalListScreen
 import com.wisepenny.presentation.goal.GoalViewModel
+import com.wisepenny.presentation.goal.LinkChallengeScreen
+import com.wisepenny.presentation.goal.LinkChallengeViewModel
 import com.wisepenny.presentation.learning.LearningListScreen
 import com.wisepenny.presentation.learning.LearningViewModel
 import com.wisepenny.presentation.learning.ModuleReaderScreen
@@ -120,27 +122,39 @@ fun AppNavHost() {
                     GoalDetailScreen(
                         state = state,
                         onBack = { navController.popBackStack() },
-                        onEdit = { /* TODO: edit goal */ },
-                        onQuickAdd = viewModel::onQuickAdd,
+                        onAddLinkedChallenge = { navController.navigate(LinkChallengeRoute(goalId)) },
                         onAddManual = viewModel::onAddManual,
                         onSetAutoSave = viewModel::onSetAutoSave,
                         onChallengeClick = { navController.navigate(ChallengeDetailRoute(it)) },
-                        onSeeAllChallenges = { /* TODO: a challenge list lands in a later step */ },
                     )
                 }
             }
 
-            composable<ChallengeDetailRoute> {
-                // The Challenge screen currently shows the single active challenge;
-                // viewing an arbitrary challenge by id is a later refinement.
+            composable<LinkChallengeRoute> { entry ->
+                val goalId = entry.toRoute<LinkChallengeRoute>().goalId
+                val viewModel = koinViewModel<LinkChallengeViewModel>()
+                LaunchedEffect(goalId) { viewModel.selectGoal(goalId) }
+                val state by viewModel.uiState.collectAsStateWithLifecycle()
+                LinkChallengeScreen(
+                    state = state,
+                    onBack = { navController.popBackStack() },
+                    onLinkChallenge = { challengeId ->
+                        viewModel.onLinkChallenge(challengeId)
+                        navController.popBackStack()
+                    },
+                )
+            }
+
+            composable<ChallengeDetailRoute> { entry ->
+                val challengeId = entry.toRoute<ChallengeDetailRoute>().challengeId
                 val viewModel = koinViewModel<ChallengeViewModel>()
+                LaunchedEffect(challengeId) { viewModel.selectChallenge(challengeId) }
                 val state by viewModel.uiState.collectAsStateWithLifecycle()
                 ChallengeDetailScreen(
                     state = state,
                     onValidateDay = viewModel::onValidateDay,
                     onSkipDay = viewModel::onSkipDay,
                     onBack = { navController.popBackStack() },
-                    onShare = { /* TODO: Step 9 native share sheet */ },
                 )
             }
 

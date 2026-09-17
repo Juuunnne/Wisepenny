@@ -9,11 +9,6 @@ CREATE TABLE Challenge (
     goalId INTEGER
 );
 
-selectActive:
-SELECT *
-FROM Challenge
-LIMIT 1;
-
 selectById:
 SELECT *
 FROM Challenge
@@ -29,6 +24,12 @@ selectActiveAll:
 SELECT *
 FROM Challenge
 WHERE completedDays < totalDays
+ORDER BY id ASC;
+
+selectUnlinked:
+SELECT *
+FROM Challenge
+WHERE goalId IS NULL
 ORDER BY id ASC;
 
 insertChallenge:

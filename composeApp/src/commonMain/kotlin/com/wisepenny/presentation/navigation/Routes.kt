@@ -24,4 +24,7 @@ data class GoalDetailRoute(val goalId: Long)
 data class ChallengeDetailRoute(val challengeId: Long)
 
 @Serializable
+data class LinkChallengeRoute(val goalId: Long)
+
+@Serializable
 data class ModuleReaderRoute(val moduleId: String)
