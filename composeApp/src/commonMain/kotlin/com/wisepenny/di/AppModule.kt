@@ -18,6 +18,7 @@ import com.wisepenny.domain.repository.ProfileRepository
 import com.wisepenny.presentation.challenge.ChallengeViewModel
 import com.wisepenny.presentation.dashboard.DashboardViewModel
 import com.wisepenny.presentation.goal.GoalViewModel
+import com.wisepenny.presentation.goal.LinkChallengeViewModel
 import com.wisepenny.presentation.learning.LearningViewModel
 import com.wisepenny.presentation.onboarding.OnboardingViewModel
 import com.wisepenny.presentation.profile.ProfileViewModel
@@ -37,6 +38,7 @@ val appModule = module {
     single { DataSeeder(get(), get(), get()) }
     viewModelOf(::ChallengeViewModel)
     viewModelOf(::GoalViewModel)
+    viewModelOf(::LinkChallengeViewModel)
     viewModelOf(::DashboardViewModel)
     viewModelOf(::LearningViewModel)
     viewModelOf(::OnboardingViewModel)

@@ -67,8 +67,6 @@ class GoalViewModel(
         selectedId.value = null
     }
 
-    fun onQuickAdd() = addToSelected(QUICK_ADD_CENTS, "quick")
-
     fun onAddManual(amountCents: Long) = addToSelected(amountCents, "manual")
 
     fun onSetAutoSave(amountCents: Long, cadence: SavingsCadence) {
@@ -119,7 +117,6 @@ class GoalViewModel(
             projectionDate = projection.date,
             projectionBars = PROJECTION_BARS,
             linkedChallenges = challenges.map { it.toLinkedItem(name) },
-            quickAddLabel = "Ajouter 10 € maintenant",
         )
     }
 
@@ -162,7 +159,6 @@ class GoalViewModel(
     private data class Projection(val message: String, val date: String?)
 
     companion object {
-        private const val QUICK_ADD_CENTS = 10_00L
         private val PROJECTION_BARS = listOf(0.25f, 0.4f, 0.55f, 0.7f, 0.85f, 1f)
 
         private val FrenchMonths = listOf(

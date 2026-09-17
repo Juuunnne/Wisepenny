@@ -15,13 +15,9 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.IosShare
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.HorizontalDivider
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
@@ -52,8 +48,10 @@ data class ChallengeUiState(
     val completedDays: Int,
     val currentDay: Int,
     val totalDays: Int,
+    val todayEmoji: String,
     val todayQuestion: String,
     val todayActionLabel: String,
+    val hasAnsweredToday: Boolean,
     val history: List<HistoryDay>,
 )
 
@@ -68,24 +66,9 @@ fun ChallengeDetailScreen(
     onValidateDay: () -> Unit,
     onSkipDay: () -> Unit,
     onBack: () -> Unit,
-    onShare: () -> Unit,
 ) {
     Scaffold(
-        topBar = {
-            WisepennyTopBar(
-                title = "Mon défi",
-                onBack = onBack,
-                actions = {
-                    IconButton(onClick = onShare) {
-                        Icon(
-                            imageVector = Icons.Outlined.IosShare,
-                            contentDescription = "Partager",
-                            tint = WisepennyColors.TextPrimary,
-                        )
-                    }
-                },
-            )
-        },
+        topBar = { WisepennyTopBar(title = "Mon défi", onBack = onBack) },
         containerColor = WisepennyColors.BackgroundPrimary,
     ) { innerPadding ->
         Column(
@@ -110,13 +93,16 @@ fun ChallengeDetailScreen(
                 totalDays = state.totalDays,
                 xpGained = state.xpGained,
             )
-            TodaySection(
-                currentDay = state.currentDay,
-                question = state.todayQuestion,
-                actionLabel = state.todayActionLabel,
-                onValidateDay = onValidateDay,
-                onSkipDay = onSkipDay,
-            )
+            if (!state.hasAnsweredToday) {
+                TodaySection(
+                    currentDay = state.currentDay,
+                    emoji = state.todayEmoji,
+                    question = state.todayQuestion,
+                    actionLabel = state.todayActionLabel,
+                    onValidateDay = onValidateDay,
+                    onSkipDay = onSkipDay,
+                )
+            }
             HistorySection(history = state.history)
         }
     }
@@ -258,6 +244,7 @@ private fun StatCard(
 @Composable
 private fun TodaySection(
     currentDay: Int,
+    emoji: String,
     question: String,
     actionLabel: String,
     onValidateDay: () -> Unit,
@@ -266,6 +253,7 @@ private fun TodaySection(
     Column(verticalArrangement = Arrangement.spacedBy(Spacing.md)) {
         SectionHeader(title = "Aujourd'hui", trailing = "Jour $currentDay")
         TodayActionCard(
+            emoji = emoji,
             question = question,
             actionLabel = actionLabel,
             onValidate = onValidateDay,
@@ -298,6 +286,7 @@ private fun SectionHeader(title: String, trailing: String? = null) {
 
 @Composable
 private fun TodayActionCard(
+    emoji: String,
     question: String,
     actionLabel: String,
     onValidate: () -> Unit,
@@ -315,7 +304,7 @@ private fun TodayActionCard(
                 .background(WisepennyColors.AccentMintSoft),
             contentAlignment = Alignment.Center,
         ) {
-            Text("☕", style = MaterialTheme.typography.titleMedium)
+            Text(emoji, style = MaterialTheme.typography.titleMedium)
         }
         Text(
             text = question,
@@ -438,8 +427,10 @@ private fun ChallengeDetailScreenPreview() {
                 completedDays = 5,
                 currentDay = 6,
                 totalDays = 7,
-                todayQuestion = "As-tu sauté ton café ce matin?",
+                todayEmoji = "☕",
+                todayQuestion = "As-tu respecté ton défi aujourd'hui ?",
                 todayActionLabel = "Oui, +3 € épargnés",
+                hasAnsweredToday = false,
                 history = listOf(
                     HistoryDay("Lundi", "+3 €"),
                     HistoryDay("Mardi", "+3 €"),
@@ -451,7 +442,6 @@ private fun ChallengeDetailScreenPreview() {
             onValidateDay = {},
             onSkipDay = {},
             onBack = {},
-            onShare = {},
         )
     }
 }

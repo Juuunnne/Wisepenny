@@ -6,11 +6,13 @@ import kotlinx.datetime.LocalDate
 
 interface ChallengeRepository {
 
-    fun observeActive(): Flow<Challenge?>
+    fun observeById(id: Long): Flow<Challenge?>
 
     fun observeByGoal(goalId: Long): Flow<List<Challenge>>
 
     fun observeActiveChallenges(): Flow<List<Challenge>>
+
+    fun observeUnlinked(): Flow<List<Challenge>>
 
     suspend fun create(
         title: String,

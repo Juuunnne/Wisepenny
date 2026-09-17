@@ -1,7 +1,6 @@
 package com.wisepenny.presentation.goal
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -19,18 +18,12 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.DateRange
-import androidx.compose.material.icons.outlined.Edit
-import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -70,7 +63,6 @@ data class GoalDetailUiState(
     val projectionDate: String?,
     val projectionBars: List<Float>,
     val linkedChallenges: List<LinkedChallengeItem>,
-    val quickAddLabel: String,
 )
 
 data class LinkedChallengeItem(
@@ -86,31 +78,17 @@ data class LinkedChallengeItem(
 fun GoalDetailScreen(
     state: GoalDetailUiState,
     onBack: () -> Unit,
-    onEdit: () -> Unit,
-    onQuickAdd: () -> Unit,
+    onAddLinkedChallenge: () -> Unit,
     onAddManual: (Long) -> Unit,
     onSetAutoSave: (Long, SavingsCadence) -> Unit,
     onChallengeClick: (Long) -> Unit,
-    onSeeAllChallenges: () -> Unit,
 ) {
     var showAddDialog by remember { mutableStateOf(false) }
     var showAutoSaveDialog by remember { mutableStateOf(false) }
 
     Scaffold(
         topBar = {
-            WisepennyTopBar(
-                title = "Objectif",
-                onBack = onBack,
-                actions = {
-                    IconButton(onClick = onEdit) {
-                        Icon(
-                            imageVector = Icons.Outlined.Edit,
-                            contentDescription = "Modifier l'objectif",
-                            tint = WisepennyColors.TextPrimary,
-                        )
-                    }
-                },
-            )
+            WisepennyTopBar(title = "Objectif", onBack = onBack)
         },
         containerColor = WisepennyColors.BackgroundPrimary,
     ) { innerPadding ->
@@ -138,9 +116,8 @@ fun GoalDetailScreen(
             LinkedChallengesSection(
                 challenges = state.linkedChallenges,
                 onChallengeClick = onChallengeClick,
-                onSeeAll = onSeeAllChallenges,
             )
-            QuickAddButton(label = state.quickAddLabel, onClick = onQuickAdd)
+            AddLinkedChallengeButton(onClick = onAddLinkedChallenge)
         }
     }
 
@@ -346,27 +323,13 @@ private fun ProjectionChart(bars: List<Float>, currentIndex: Int) {
 private fun LinkedChallengesSection(
     challenges: List<LinkedChallengeItem>,
     onChallengeClick: (Long) -> Unit,
-    onSeeAll: () -> Unit,
 ) {
     Column(verticalArrangement = Arrangement.spacedBy(Spacing.md)) {
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceBetween,
-        ) {
-            Text(
-                text = "Défis liés",
-                style = MaterialTheme.typography.headlineMedium,
-                color = WisepennyColors.TextPrimary,
-            )
-            Text(
-                text = "Voir tout ↗",
-                style = MaterialTheme.typography.labelSmall,
-                color = WisepennyColors.AccentMint,
-                fontWeight = FontWeight.Bold,
-                modifier = Modifier.clickable(onClick = onSeeAll),
-            )
-        }
+        Text(
+            text = "Défis liés",
+            style = MaterialTheme.typography.headlineMedium,
+            color = WisepennyColors.TextPrimary,
+        )
         if (challenges.isEmpty()) {
             Text(
                 text = "Aucun défi lié pour l'instant",
@@ -456,7 +419,7 @@ private fun StatusPill(text: String) {
 }
 
 @Composable
-private fun QuickAddButton(label: String, onClick: () -> Unit) {
+private fun AddLinkedChallengeButton(onClick: () -> Unit) {
     Button(
         onClick = onClick,
         colors = ButtonDefaults.buttonColors(
@@ -466,7 +429,13 @@ private fun QuickAddButton(label: String, onClick: () -> Unit) {
         shape = WisepennyShapes.small,
         modifier = Modifier.fillMaxWidth().height(56.dp),
     ) {
-        Text(text = "$label ↗", style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Bold)
+        Icon(imageVector = Icons.Filled.Add, contentDescription = null)
+        Text(
+            text = "Ajouter un défi lié",
+            style = MaterialTheme.typography.bodyMedium,
+            fontWeight = FontWeight.Bold,
+            modifier = Modifier.padding(start = Spacing.xs),
+        )
     }
 }
 
@@ -477,94 +446,6 @@ private fun SectionHeader(title: String) {
         style = MaterialTheme.typography.headlineMedium,
         color = WisepennyColors.TextPrimary,
     )
-}
-
-@Composable
-private fun AmountDialog(
-    title: String,
-    confirmLabel: String,
-    onConfirm: (Long) -> Unit,
-    onDismiss: () -> Unit,
-) {
-    var text by remember { mutableStateOf("") }
-    val cents = text.filter { it.isDigit() }.toLongOrNull()?.times(100)
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        title = { Text(title) },
-        text = {
-            OutlinedTextField(
-                value = text,
-                onValueChange = { text = it.filter { c -> c.isDigit() } },
-                label = { Text("Montant en €") },
-                singleLine = true,
-            )
-        },
-        confirmButton = {
-            TextButton(
-                onClick = { cents?.let(onConfirm) },
-                enabled = cents != null && cents > 0,
-            ) { Text(confirmLabel) }
-        },
-        dismissButton = { TextButton(onClick = onDismiss) { Text("Annuler") } },
-    )
-}
-
-@Composable
-private fun AutoSaveDialog(
-    onConfirm: (Long, SavingsCadence) -> Unit,
-    onDismiss: () -> Unit,
-) {
-    var text by remember { mutableStateOf("") }
-    var cadence by remember { mutableStateOf(SavingsCadence.WEEKLY) }
-    val cents = text.filter { it.isDigit() }.toLongOrNull()?.times(100)
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        title = { Text("Programmer une auto-épargne") },
-        text = {
-            Column(verticalArrangement = Arrangement.spacedBy(Spacing.md)) {
-                OutlinedTextField(
-                    value = text,
-                    onValueChange = { text = it.filter { c -> c.isDigit() } },
-                    label = { Text("Montant en €") },
-                    singleLine = true,
-                )
-                Row(horizontalArrangement = Arrangement.spacedBy(Spacing.sm)) {
-                    CadenceChip("Par semaine", cadence == SavingsCadence.WEEKLY) {
-                        cadence = SavingsCadence.WEEKLY
-                    }
-                    CadenceChip("Par mois", cadence == SavingsCadence.MONTHLY) {
-                        cadence = SavingsCadence.MONTHLY
-                    }
-                }
-            }
-        },
-        confirmButton = {
-            TextButton(
-                onClick = { cents?.let { onConfirm(it, cadence) } },
-                enabled = cents != null && cents > 0,
-            ) { Text("Programmer") }
-        },
-        dismissButton = { TextButton(onClick = onDismiss) { Text("Annuler") } },
-    )
-}
-
-@Composable
-private fun CadenceChip(label: String, selected: Boolean, onClick: () -> Unit) {
-    if (selected) {
-        Button(
-            onClick = onClick,
-            colors = ButtonDefaults.buttonColors(
-                containerColor = WisepennyColors.AccentMint,
-                contentColor = WisepennyColors.TextOnLight,
-            ),
-            shape = WisepennyShapes.extraSmall,
-        ) { Text(label, style = MaterialTheme.typography.labelSmall) }
-    } else {
-        OutlinedButton(
-            onClick = onClick,
-            shape = WisepennyShapes.extraSmall,
-        ) { Text(label, style = MaterialTheme.typography.labelSmall, color = WisepennyColors.TextSecondary) }
-    }
 }
 
 @Preview
@@ -589,15 +470,12 @@ private fun GoalDetailScreenPreview() {
                     LinkedChallengeItem(1, "coffee", "7 jours sans café", "+15 € vers Lisbonne", "Jour 5/7", true),
                     LinkedChallengeItem(2, "shopping", "Pas d'achat impulsif", "+20 € vers Lisbonne", null, false),
                 ),
-                quickAddLabel = "Ajouter 10 € maintenant",
             ),
             onBack = {},
-            onEdit = {},
-            onQuickAdd = {},
+            onAddLinkedChallenge = {},
             onAddManual = {},
             onSetAutoSave = { _, _ -> },
             onChallengeClick = {},
-            onSeeAllChallenges = {},
         )
     }
 }
